@@ -99,6 +99,15 @@
         </div> <!-- end ui-content -->
     </div> <!-- end ui-panel -->
 
+    <!-- Game Over Modal -->
+    <div id="game-over-modal" class="modal" style="display: none;">
+        <div class="modal-content game-over-content">
+            <h1 class="game-over-title">💀 Game Over</h1>
+            <p class="game-over-text">You have been defeated!</p>
+            <button id="restart-btn" class="restart-btn">🔄 Restart Game</button>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <!-- Item Fusion System -->
     <script src="config.js"></script>
@@ -109,11 +118,19 @@
     <script src="ui.js"></script>
     
     <!-- Game System -->
+    <!-- Game Entities -->
     <script src="game/Player.js"></script>
     <script src="game/Enemy.js"></script>
     <script src="game/Projectile.js"></script>
     <script src="game/Weapon.js"></script>
-    <script src="game/GameScene.js"></script>
+    
+    <!-- UI Screens -->
+    <script src="ui/GameOverScreen.js"></script>
+    
+    <!-- Scenes -->
+    <script src="scenes/GameScene.js"></script>
+    
+    <!-- Game Initialization -->
     <script src="game.js"></script>
 </body>
 </html>

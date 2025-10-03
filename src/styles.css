@@ -587,6 +587,50 @@ button {
     color: var(--color-text-dim);
 }
 
+/* Game Over Modal */
+.game-over-content {
+    text-align: center;
+    padding: 50px 30px;
+}
+
+.game-over-title {
+    font-size: 3em;
+    margin-bottom: 20px;
+    background: linear-gradient(45deg, #f44336, #ff9800);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.game-over-text {
+    font-size: 1.3em;
+    color: var(--color-text-dim);
+    margin-bottom: 30px;
+}
+
+.restart-btn {
+    padding: 15px 40px;
+    font-size: 1.3em;
+    background: linear-gradient(135deg, var(--color-uncommon), var(--color-rare));
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    font-weight: bold;
+}
+
+.restart-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.restart-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .selection-area {

@@ -63,6 +63,12 @@ class GameScene extends Phaser.Scene {
             padding: { x: 5, y: 5 }
         });
 
+        // Game state
+        this.isGameOver = false;
+
+        // Initialize Game Over Screen
+        this.gameOverScreen = new GameOverScreen(() => this.restartGame());
+
         console.log('✅ Game scene created');
     }
 
@@ -110,9 +116,26 @@ class GameScene extends Phaser.Scene {
             this.enemyManager.spawn(width / 2 + 200, height / 2);
             console.log('🎯 New enemy spawned (E key)');
         });
+
+        // K key: Kill player (test game over)
+        this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.K).on('down', () => {
+            this.player.stats.currentHealth = 0;
+            console.log('☠️ Player killed (K key - testing game over)');
+        });
     }
 
     update(time, delta) {
+        // Stop updates if game over
+        if (this.isGameOver) {
+            return;
+        }
+
+        // Check for game over
+        if (this.player.stats.currentHealth <= 0) {
+            this.triggerGameOver();
+            return;
+        }
+
         // Update player
         this.player.update(this.cursors, this.wasd);
 
@@ -131,6 +154,52 @@ class GameScene extends Phaser.Scene {
         this.updateDebugText();
     }
 
+    triggerGameOver() {
+        this.isGameOver = true;
+        
+        // Show game over screen
+        this.gameOverScreen.show();
+
+        // Pause physics
+        this.physics.pause();
+    }
+
+    restartGame() {
+        console.log('🔄 Restarting game...');
+        
+        // Reset game state
+        this.isGameOver = false;
+
+        // Resume physics
+        this.physics.resume();
+
+        // Reset player
+        const width = this.scale.width;
+        const height = this.scale.height;
+        this.player.sprite.setPosition(width / 2, height / 2);
+        this.player.sprite.body.setVelocity(0, 0);
+        this.player.stats.currentHealth = this.player.stats.maxHealth;
+
+        // Clear all enemies
+        this.enemyManager.getEnemies().forEach(enemy => {
+            if (enemy.isAlive) {
+                enemy.kill();
+            }
+        });
+
+        // Clear all projectiles
+        this.projectileManager.projectiles.forEach(projectile => {
+            if (projectile.isActive) {
+                projectile.destroy();
+            }
+        });
+
+        // Spawn initial enemy
+        this.enemyManager.spawn(width / 2 + 200, height / 2);
+
+        console.log('✅ Game restarted');
+    }
+
     updateDebugText() {
         const playerPos = this.player.getPosition();
         const nearestEnemy = this.enemyManager.findNearest(playerPos.x, playerPos.y);
@@ -146,7 +215,7 @@ class GameScene extends Phaser.Scene {
             enemyInfo,
             '',
             'Controls: WASD or Arrow Keys',
-            'Press E to spawn new enemy'
+            'Press E to spawn enemy | Press K to test game over'
         ]);
     }
 
