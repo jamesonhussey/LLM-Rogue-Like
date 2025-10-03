@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Item Fusion Prototype</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>🔮 LLM Item Fusion</h1>
+            <p class="subtitle">Combine items to create unique, AI-generated equipment</p>
+        </header>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-label">Total Items</div>
+                <div class="stat-value" id="stat-total">10</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Generated</div>
+                <div class="stat-value" id="stat-generated">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Combinations</div>
+                <div class="stat-value" id="stat-combinations">0</div>
+            </div>
+        </div>
+
+        <!-- Fusion Interface -->
+        <div class="fusion-interface">
+            <h2>Select Items to Combine</h2>
+            
+            <div class="selection-area">
+                <div class="item-selector">
+                    <label for="item1-select">Item 1:</label>
+                    <select id="item1-select">
+                        <option value="">-- Select Item --</option>
+                    </select>
+                </div>
+
+                <div class="item-selector">
+                    <label for="item2-select">Item 2:</label>
+                    <select id="item2-select">
+                        <option value="">-- Select Item --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button id="combine-btn">🔮 Combine Items</button>
+                <button id="clear-data-btn">🗑️ Clear All Data</button>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading">
+            <div class="spinner"></div>
+            <p>🤖 Generating item with LLM...</p>
+        </div>
+
+        <!-- Result Display -->
+        <div id="result-container">
+            <h2>Result</h2>
+            <div id="result-content"></div>
+            
+            <button id="toggle-json-btn">Show JSON</button>
+            <div id="json-container">
+                <pre id="json-output"></pre>
+            </div>
+        </div>
+
+        <!-- Inventory Display -->
+        <div class="inventory-section">
+            <h2>Your Inventory</h2>
+            <p class="inventory-hint">💡 Click any item to view details</p>
+            <div id="inventory-list"></div>
+        </div>
+
+        <!-- Item Detail View -->
+        <div id="item-detail-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close-modal" id="close-item-detail">&times;</span>
+                <div id="item-detail-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="config.js"></script>
+    <script src="startingItems.js"></script>
+    <script src="itemStorage.js"></script>
+    <script src="itemFusionPrompt.js"></script>
+    <script src="itemGenerator.js"></script>
+    <script src="ui.js"></script>
+</body>
+</html>
+

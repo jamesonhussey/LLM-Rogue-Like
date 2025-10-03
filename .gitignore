@@ -1,0 +1,23 @@
+# API Keys and Environment Variables
+config.js
+.env
+
+# Node modules (if we add any later)
+node_modules/
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Presentation/Demo prep files (don't share these)
+PROJECT_STATUS.md
+GETTING_STARTED.md
+LLM_ITEM_FUSION_PLAN.md
+
