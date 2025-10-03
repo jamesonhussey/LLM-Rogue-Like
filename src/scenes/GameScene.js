@@ -52,8 +52,11 @@ class GameScene extends Phaser.Scene {
         // Debug/Test controls
         this.setupDebugControls();
 
-        // Debug text
-        this.debugText = this.add.text(10, 10, '', {
+        // Create UI elements
+        this.healthBar = new HealthBar(this, 15, 20);
+
+        // Debug text (moved down to not overlap health bar)
+        this.debugText = this.add.text(10, 90, '', {
             fontSize: '14px',
             fill: '#ffffff',
             backgroundColor: '#000000',
@@ -189,7 +192,8 @@ class GameScene extends Phaser.Scene {
         const playerPos = this.player.getPosition();
         this.enemyManager.update(playerPos.x, playerPos.y);
 
-        // Update debug text
+        // Update UI
+        this.healthBar.update(this.player.stats.currentHealth, this.player.stats.maxHealth);
         this.updateDebugText();
     }
 
