@@ -31,9 +31,17 @@ class GameScene extends Phaser.Scene {
         // Initialize game entities
         this.player = new Player(this, width / 2, height / 2);
         this.enemyManager = new EnemyManager(this);
+        this.projectileManager = new ProjectileManager(this);
+
+        // Give player a weapon
+        const weapon = new Weapon(this, this.player, this.projectileManager, this.enemyManager);
+        this.player.setWeapon(weapon);
 
         // Spawn initial test enemy
         this.enemyManager.spawn(width / 2 + 200, height / 2);
+
+        // Setup collisions
+        this.setupCollisions();
 
         // Input controls
         this.cursors = this.input.keyboard.createCursorKeys();
@@ -58,6 +66,33 @@ class GameScene extends Phaser.Scene {
         console.log('✅ Game scene created');
     }
 
+    setupCollisions() {
+        // Collision between projectiles and enemies
+        this.physics.add.overlap(
+            this.projectileManager.getGroup(),
+            this.enemyManager.enemyGroup,
+            this.onProjectileHitEnemy,
+            null,
+            this
+        );
+    }
+
+    onProjectileHitEnemy(projectileSprite, enemySprite) {
+        // Get data from sprites
+        const projectile = projectileSprite.projectileData;
+        const enemy = enemySprite.enemyData;
+
+        if (!projectile || !enemy || !projectile.isActive || !enemy.isAlive) {
+            return;
+        }
+
+        // Apply damage
+        enemy.takeDamage(projectile.getDamage());
+
+        // Destroy projectile
+        projectile.destroy();
+    }
+
     setupDebugControls() {
         // T key: Damage nearest enemy
         this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T).on('down', () => {
@@ -77,9 +112,17 @@ class GameScene extends Phaser.Scene {
         });
     }
 
-    update() {
+    update(time, delta) {
         // Update player
         this.player.update(this.cursors, this.wasd);
+
+        // Update weapon (auto-fire)
+        if (this.player.weapon) {
+            this.player.weapon.update(delta);
+        }
+
+        // Update projectiles
+        this.projectileManager.update();
 
         // Update enemies
         this.enemyManager.update();
@@ -98,11 +141,11 @@ class GameScene extends Phaser.Scene {
         this.debugText.setText([
             `Player: (${Math.round(playerPos.x)}, ${Math.round(playerPos.y)})`,
             `Health: ${this.player.stats.currentHealth}/${this.player.stats.maxHealth}`,
-            `Speed: ${this.player.stats.speed}`,
-            `Enemies: ${this.enemyManager.getCount()} - ${enemyInfo}`,
+            `Damage: ${this.player.stats.damageBonus} | Attack Speed: ${this.player.stats.attackSpeed}`,
+            `Enemies: ${this.enemyManager.getCount()} | Projectiles: ${this.projectileManager.getCount()}`,
+            enemyInfo,
             '',
             'Controls: WASD or Arrow Keys',
-            'Press T to damage nearest enemy',
             'Press E to spawn new enemy'
         ]);
     }

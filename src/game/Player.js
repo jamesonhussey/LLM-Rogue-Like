@@ -28,7 +28,14 @@ class Player {
             xp_gain: 1
         };
 
+        // Weapon will be set by GameScene
+        this.weapon = null;
+
         console.log('✅ Player created');
+    }
+
+    setWeapon(weapon) {
+        this.weapon = weapon;
     }
 
     update(cursors, wasd) {
