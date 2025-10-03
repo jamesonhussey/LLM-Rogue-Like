@@ -3,16 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LLM Item Fusion Prototype</title>
+    <title>Brotato x Infinite Craft - LLM Roguelike</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- Phaser 3 -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <header>
-            <h1>🔮 LLM Item Fusion</h1>
-            <p class="subtitle">Combine items to create unique, AI-generated equipment</p>
-        </header>
+    <!-- Game Canvas Container -->
+    <div id="game-container"></div>
+
+    <!-- UI Panel (toggleable) -->
+    <div id="ui-panel" class="ui-panel">
+        <button id="toggle-ui-btn" class="toggle-ui-btn">📦</button>
+        
+        <div id="ui-content" class="ui-content">
+            <!-- Header -->
+            <header>
+                <h1>🔮 Item Fusion</h1>
+                <p class="subtitle">Combine items to create unique equipment</p>
+            </header>
 
         <!-- Stats Bar -->
         <div class="stats-bar">
@@ -87,15 +96,23 @@
                 <div id="item-detail-content"></div>
             </div>
         </div>
-    </div>
+        </div> <!-- end ui-content -->
+    </div> <!-- end ui-panel -->
 
     <!-- Scripts -->
+    <!-- Item Fusion System -->
     <script src="config.js"></script>
     <script src="startingItems.js"></script>
     <script src="itemStorage.js"></script>
     <script src="itemFusionPrompt.js"></script>
     <script src="itemGenerator.js"></script>
     <script src="ui.js"></script>
+    
+    <!-- Game System -->
+    <script src="game/Player.js"></script>
+    <script src="game/Enemy.js"></script>
+    <script src="game/GameScene.js"></script>
+    <script src="game.js"></script>
 </body>
 </html>
 

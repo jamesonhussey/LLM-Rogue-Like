@@ -92,11 +92,18 @@ class UI {
         const toggleJsonBtn = document.getElementById('toggle-json-btn');
         const closeModalBtn = document.getElementById('close-item-detail');
         const modal = document.getElementById('item-detail-modal');
+        const toggleUiBtn = document.getElementById('toggle-ui-btn');
+        const uiPanel = document.getElementById('ui-panel');
 
         combineBtn.addEventListener('click', () => this.handleCombine());
         clearDataBtn.addEventListener('click', () => this.handleClearData());
         toggleJsonBtn.addEventListener('click', () => this.toggleJsonView());
         closeModalBtn.addEventListener('click', () => this.closeItemDetail());
+        
+        // Toggle UI panel
+        toggleUiBtn.addEventListener('click', () => {
+            uiPanel.classList.toggle('open');
+        });
 
         // Close modal when clicking outside of it
         modal.addEventListener('click', (e) => {
