@@ -9,11 +9,16 @@ class Enemy {
         this.sprite = scene.add.circle(x, y, 12, 0xff4444);
         scene.physics.add.existing(this.sprite);
         this.sprite.body.setCollideWorldBounds(true);
+        
+        // Set smaller collision body (80% of visual size for better overlap)
+        this.sprite.body.setCircle(9.5); // Visual radius 12, physics radius 9.5
+        this.sprite.body.setBounce(0.3); // Slight bounce to separate overlapping enemies
 
         // Enemy stats
         this.maxHealth = 50;
         this.currentHealth = 50;
-        this.speed = 0; // Stationary for now
+        this.speed = 60; // Movement speed
+        this.contactDamage = 10; // Damage dealt to player on contact
 
         // Create health bar
         const barWidth = 40;
@@ -33,8 +38,23 @@ class Enemy {
         this.isAlive = true;
     }
 
-    update() {
+    update(playerX, playerY) {
         if (!this.isAlive) return;
+
+        // Move toward player
+        if (playerX !== undefined && playerY !== undefined) {
+            const angle = Phaser.Math.Angle.Between(
+                this.sprite.x, 
+                this.sprite.y, 
+                playerX, 
+                playerY
+            );
+            
+            this.sprite.body.setVelocity(
+                Math.cos(angle) * this.speed,
+                Math.sin(angle) * this.speed
+            );
+        }
 
         // Update health bar position to follow enemy
         const x = this.sprite.x;
@@ -105,11 +125,11 @@ class EnemyManager {
         return enemy;
     }
 
-    update() {
-        // Update all enemies
+    update(playerX, playerY) {
+        // Update all enemies (pass player position for movement)
         this.enemies.forEach(enemy => {
             if (enemy.isAlive) {
-                enemy.update();
+                enemy.update(playerX, playerY);
             }
         });
 

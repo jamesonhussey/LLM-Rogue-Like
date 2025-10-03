@@ -9,8 +9,11 @@ class Player {
         this.sprite = scene.add.circle(x, y, 15, 0x4caf50);
         scene.physics.add.existing(this.sprite);
         this.sprite.body.setCollideWorldBounds(true);
-        this.sprite.body.setDrag(800);
-        this.sprite.body.setMaxVelocity(300);
+        
+        // Set smaller collision body (80% of visual size for better overlap with enemies)
+        this.sprite.body.setCircle(12); // Visual radius 15, physics radius 12
+        
+        // No drag - using velocity-based movement like enemies
 
         // Player stats (will be affected by items)
         this.stats = {
@@ -39,28 +42,34 @@ class Player {
     }
 
     update(cursors, wasd) {
-        // Player movement
-        const velocity = new Phaser.Math.Vector2(0, 0);
+        // Player movement (velocity-based like enemies)
+        const direction = new Phaser.Math.Vector2(0, 0);
         
         // Check WASD and arrow keys
         if (cursors.left.isDown || wasd.left.isDown) {
-            velocity.x = -1;
+            direction.x = -1;
         } else if (cursors.right.isDown || wasd.right.isDown) {
-            velocity.x = 1;
+            direction.x = 1;
         }
         
         if (cursors.up.isDown || wasd.up.isDown) {
-            velocity.y = -1;
+            direction.y = -1;
         } else if (cursors.down.isDown || wasd.down.isDown) {
-            velocity.y = 1;
+            direction.y = 1;
         }
 
-        // Normalize diagonal movement
-        velocity.normalize();
-        
-        // Apply movement
-        const speed = this.stats.speed;
-        this.sprite.body.setAcceleration(velocity.x * speed * 10, velocity.y * speed * 10);
+        // Apply movement directly with velocity (like enemies)
+        if (direction.x !== 0 || direction.y !== 0) {
+            // Normalize diagonal movement
+            direction.normalize();
+            
+            // Apply velocity based on speed stat
+            const speed = this.stats.speed;
+            this.sprite.body.setVelocity(direction.x * speed, direction.y * speed);
+        } else {
+            // No input - stop immediately
+            this.sprite.body.setVelocity(0, 0);
+        }
     }
 
     applyItemEffects(item) {
@@ -83,6 +92,19 @@ class Player {
 
         console.log(`✨ Applied item effects from: ${item.name}`);
         console.log('Player stats:', this.stats);
+    }
+
+    takeDamage(amount) {
+        // Reduce damage by armor (simple formula: 1 armor = 1% damage reduction)
+        const damageReduction = Math.min(this.stats.armor, 75) / 100; // Cap at 75% reduction
+        const actualDamage = Math.round(amount * (1 - damageReduction));
+        
+        this.stats.currentHealth -= actualDamage;
+        if (this.stats.currentHealth < 0) {
+            this.stats.currentHealth = 0;
+        }
+        
+        console.log(`💥 Player took ${actualDamage} damage (Health: ${this.stats.currentHealth}/${this.stats.maxHealth})`);
     }
 
     getPosition() {

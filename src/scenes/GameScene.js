@@ -37,9 +37,6 @@ class GameScene extends Phaser.Scene {
         const weapon = new Weapon(this, this.player, this.projectileManager, this.enemyManager);
         this.player.setWeapon(weapon);
 
-        // Spawn initial test enemy
-        this.enemyManager.spawn(width / 2 + 200, height / 2);
-
         // Setup collisions
         this.setupCollisions();
 
@@ -73,7 +70,7 @@ class GameScene extends Phaser.Scene {
     }
 
     setupCollisions() {
-        // Collision between projectiles and enemies
+        // Collision between projectiles and enemies (damage)
         this.physics.add.overlap(
             this.projectileManager.getGroup(),
             this.enemyManager.enemyGroup,
@@ -81,6 +78,31 @@ class GameScene extends Phaser.Scene {
             null,
             this
         );
+
+        // Overlap between player and enemies (damage detection)
+        this.physics.add.overlap(
+            this.player.sprite,
+            this.enemyManager.enemyGroup,
+            this.onPlayerHitEnemy,
+            null,
+            this
+        );
+
+        // Physical collision between player and enemies (blocking movement)
+        this.physics.add.collider(
+            this.player.sprite,
+            this.enemyManager.enemyGroup
+        );
+
+        // Physical collision between enemies (prevent full overlap)
+        this.physics.add.collider(
+            this.enemyManager.enemyGroup,
+            this.enemyManager.enemyGroup
+        );
+
+        // Track time between enemy damage to player (cooldown)
+        this.lastEnemyDamageTime = 0;
+        this.enemyDamageCooldown = 500; // 0.5 seconds between hits
     }
 
     onProjectileHitEnemy(projectileSprite, enemySprite) {
@@ -97,6 +119,22 @@ class GameScene extends Phaser.Scene {
 
         // Destroy projectile
         projectile.destroy();
+    }
+
+    onPlayerHitEnemy(playerSprite, enemySprite) {
+        // Damage cooldown to prevent instant death
+        if (this.time.now < this.lastEnemyDamageTime + this.enemyDamageCooldown) {
+            return;
+        }
+
+        const enemy = enemySprite.enemyData;
+        if (!enemy || !enemy.isAlive) {
+            return;
+        }
+
+        // Apply damage to player
+        this.player.takeDamage(enemy.contactDamage);
+        this.lastEnemyDamageTime = this.time.now;
     }
 
     setupDebugControls() {
@@ -147,8 +185,9 @@ class GameScene extends Phaser.Scene {
         // Update projectiles
         this.projectileManager.update();
 
-        // Update enemies
-        this.enemyManager.update();
+        // Update enemies (pass player position for chasing)
+        const playerPos = this.player.getPosition();
+        this.enemyManager.update(playerPos.x, playerPos.y);
 
         // Update debug text
         this.updateDebugText();
@@ -193,9 +232,6 @@ class GameScene extends Phaser.Scene {
                 projectile.destroy();
             }
         });
-
-        // Spawn initial enemy
-        this.enemyManager.spawn(width / 2 + 200, height / 2);
 
         console.log('✅ Game restarted');
     }
