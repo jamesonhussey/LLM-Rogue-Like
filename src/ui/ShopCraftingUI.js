@@ -48,19 +48,9 @@ class ShopCraftingUI {
 
         if (!select1 || !select2) return;
 
-        // Use player's CURRENT RUN inventory (items they've bought/equipped this run)
-        const allItems = itemStorage.getPlayerRunInventory();
-
-        // Deduplicate items by ID (prevent same item showing multiple times)
-        const uniqueItems = [];
-        const seenIds = new Set();
-        
-        allItems.forEach(item => {
-            if (!seenIds.has(item.id)) {
-                seenIds.add(item.id);
-                uniqueItems.push(item);
-            }
-        });
+        // Use player's CURRENT RUN inventory (flattened to get unique items)
+        // getPlayerRunInventoryFlattened() returns array of items (no counts, no duplicates)
+        const uniqueItems = itemStorage.getPlayerRunInventoryFlattened();
 
         // Clear existing options
         select1.innerHTML = '<option value="">-- Select Item --</option>';

@@ -86,18 +86,27 @@ class ItemStorage {
     // ===== PLAYER RUN INVENTORY (current run only) =====
 
     // Add item to player's current run inventory (for crafting)
+    // Uses stacking: { item, count }
     addToPlayerRunInventory(item) {
         // Check if item already exists
-        const exists = this.playerRunInventory.find(i => i.id === item.id);
-        if (!exists) {
-            this.playerRunInventory.push(item);
-            console.log(`📦 Added to player run inventory: ${item.name}`);
+        const existingStack = this.playerRunInventory.find(stack => stack.item.id === item.id);
+        if (existingStack) {
+            existingStack.count++;
+            console.log(`📦 Added to stack: ${item.name} (x${existingStack.count})`);
+        } else {
+            this.playerRunInventory.push({ item: item, count: 1 });
+            console.log(`📦 Added to player run inventory: ${item.name} (x1)`);
         }
     }
 
-    // Get player's current run inventory
+    // Get player's current run inventory (returns array of { item, count })
     getPlayerRunInventory() {
         return this.playerRunInventory;
+    }
+
+    // Get flattened inventory (returns array of unique items only, for crafting dropdowns)
+    getPlayerRunInventoryFlattened() {
+        return this.playerRunInventory.map(stack => stack.item);
     }
 
     // Clear player's current run inventory (on game restart)

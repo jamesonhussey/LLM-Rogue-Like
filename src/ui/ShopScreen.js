@@ -258,14 +258,17 @@ class ShopScreen {
         const inventoryList = document.getElementById('shop-player-inventory-list');
         if (!inventoryList) return;
 
-        const playerItems = itemStorage.getPlayerRunInventory();
+        const playerStacks = itemStorage.getPlayerRunInventory(); // Array of { item, count }
 
-        if (playerItems.length === 0) {
+        if (playerStacks.length === 0) {
             inventoryList.innerHTML = '<div class="shop-inventory-empty">No items yet. Buy items from the shop to start crafting!</div>';
             return;
         }
 
-        inventoryList.innerHTML = playerItems.map(item => {
+        inventoryList.innerHTML = playerStacks.map(stack => {
+            const item = stack.item;
+            const count = stack.count;
+            
             const effectsEntries = Object.entries(item.effects)
                 .filter(([key, value]) => value !== 0);
 
@@ -280,10 +283,13 @@ class ShopScreen {
                 }).join('')
                 : '<span class="no-effects">No stat effects</span>';
 
+            // Display count only if > 1
+            const countText = count > 1 ? ` x${count}` : '';
+
             return `
                 <div class="shop-inventory-item ${item.rarity}">
                     <div class="shop-inventory-item-name">
-                        ${this.getRarityEmoji(item.rarity)} ${item.name}
+                        ${this.getRarityEmoji(item.rarity)} ${item.name}${countText}
                     </div>
                     <div class="shop-inventory-item-effects">
                         ${effectsHTML}
