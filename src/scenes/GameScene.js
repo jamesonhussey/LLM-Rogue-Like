@@ -78,10 +78,19 @@ class GameScene extends Phaser.Scene {
 
         // Game state
         this.isGameOver = false;
+        this.isPaused = false;
 
         // Initialize UI Screens
         this.gameOverScreen = new GameOverScreen(() => this.restartGame());
         this.shopScreen = new ShopScreen(() => this.startNextRound());
+        this.pauseMenu = new PauseMenu(
+            () => this.resumeGame(),
+            () => {
+                this.pauseMenu.hide();
+                this.resumeGame();
+                this.restartGame();
+            }
+        );
 
         // Round HUD elements
         this.roundNumberText = document.getElementById('round-number');
@@ -209,11 +218,16 @@ class GameScene extends Phaser.Scene {
                 console.log('⏩ Forcing round end (N key)');
             }
         });
+
+        // ESC key: Toggle pause menu
+        this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC).on('down', () => {
+            this.togglePause();
+        });
     }
 
     update(time, delta) {
-        // Stop updates if game over or in shop
-        if (this.isGameOver || this.shopScreen.isVisible()) {
+        // Stop updates if game over, paused, or in shop
+        if (this.isGameOver || this.isPaused || this.shopScreen.isVisible()) {
             return;
         }
 
@@ -352,6 +366,46 @@ class GameScene extends Phaser.Scene {
         if (this.currencyText) {
             this.currencyText.setText(`💰 ${this.player.stats.currency}`);
         }
+    }
+
+    togglePause() {
+        // Don't allow pausing if game over or in shop
+        if (this.isGameOver || this.shopScreen.isVisible()) {
+            return;
+        }
+
+        if (this.isPaused) {
+            // Resume
+            this.resumeGame();
+        } else {
+            // Pause
+            this.pauseGame();
+        }
+    }
+
+    pauseGame() {
+        this.isPaused = true;
+        this.physics.pause();
+
+        // Show pause menu with current data
+        const playerInventory = itemStorage.getPlayerRunInventory();
+        const roundInfo = this.waveManager.getRoundInfo();
+        
+        this.pauseMenu.show(
+            this.player.stats,
+            playerInventory,
+            roundInfo.roundNumber,
+            this.player.stats.currency
+        );
+
+        console.log('⏸️ Game paused');
+    }
+
+    resumeGame() {
+        this.isPaused = false;
+        this.physics.resume();
+        this.pauseMenu.hide();
+        console.log('▶️ Game resumed');
     }
 
     onRoundComplete(roundNumber) {

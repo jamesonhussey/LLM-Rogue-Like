@@ -1169,3 +1169,189 @@ button {
     }
 }
 
+/* ===== PAUSE MENU STYLES ===== */
+.pause-modal-content {
+    max-width: 1000px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.pause-title {
+    text-align: center;
+    font-size: 3em;
+    margin-bottom: 20px;
+    color: var(--color-accent);
+    text-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+}
+
+.pause-round-info {
+    background: rgba(15, 52, 96, 0.5);
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    font-weight: bold;
+    color: #ffd700;
+}
+
+.pause-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    margin-bottom: 25px;
+}
+
+.pause-stats-column,
+.pause-items-column {
+    background: rgba(15, 52, 96, 0.3);
+    padding: 20px;
+    border-radius: 12px;
+    border: 2px solid var(--color-accent);
+}
+
+.pause-stats-column h3,
+.pause-items-column h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: var(--color-accent);
+    font-size: 1.5em;
+    border-bottom: 2px solid var(--color-accent);
+    padding-bottom: 8px;
+}
+
+/* Player Stats Grid */
+.pause-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+.pause-stat-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+    font-size: 1.1em;
+}
+
+.pause-stat-label {
+    color: var(--color-text-dim);
+}
+
+.pause-stat-value {
+    color: var(--color-accent);
+    font-weight: bold;
+}
+
+/* Equipped Items List */
+.pause-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.pause-item {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 12px;
+    border-radius: 8px;
+    border-left: 4px solid var(--color-common);
+}
+
+.pause-item.uncommon { border-left-color: var(--color-uncommon); }
+.pause-item.rare { border-left-color: var(--color-rare); }
+.pause-item.epic { border-left-color: var(--color-epic); }
+.pause-item.legendary { border-left-color: var(--color-legendary); }
+
+.pause-item-name {
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-bottom: 6px;
+}
+
+.pause-item.common .pause-item-name { color: var(--color-common); }
+.pause-item.uncommon .pause-item-name { color: var(--color-uncommon); }
+.pause-item.rare .pause-item-name { color: var(--color-rare); }
+.pause-item.epic .pause-item-name { color: var(--color-epic); }
+.pause-item.legendary .pause-item-name { color: var(--color-legendary); }
+
+.pause-item-effects {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.95em;
+}
+
+.pause-effect-line {
+    padding: 2px 4px;
+}
+
+.pause-effect-line.positive {
+    color: #4caf50;
+}
+
+.pause-effect-line.negative {
+    color: #f44336;
+}
+
+.pause-no-effects {
+    color: var(--color-text-dim);
+    font-style: italic;
+}
+
+.pause-no-items {
+    text-align: center;
+    padding: 40px;
+    color: var(--color-text-dim);
+    font-size: 1.2em;
+}
+
+/* Pause Menu Buttons */
+.pause-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.pause-btn {
+    padding: 15px 40px;
+    font-size: 1.3em;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.pause-btn.primary {
+    background: linear-gradient(135deg, var(--color-accent), #66bb6a);
+    color: white;
+}
+
+.pause-btn.secondary {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+    color: white;
+}
+
+.pause-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* Responsive adjustments for pause menu */
+@media (max-width: 900px) {
+    .pause-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .pause-buttons {
+        flex-direction: column;
+    }
+
+    .pause-btn {
+        width: 100%;
+    }
+}
+

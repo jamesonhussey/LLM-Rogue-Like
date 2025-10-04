@@ -190,6 +190,30 @@
         </div>
     </div>
 
+    <!-- Pause Menu Modal -->
+    <div id="pause-modal" class="modal" style="display: none;">
+        <div class="modal-content pause-modal-content">
+            <h1 class="pause-title">⏸️ PAUSED</h1>
+            
+            <!-- Round & Currency Info -->
+            <div id="pause-round-info" class="pause-round-info"></div>
+            
+            <div class="pause-layout">
+                <!-- Left Column: Player Stats -->
+                <div id="pause-player-stats" class="pause-stats-column"></div>
+                
+                <!-- Right Column: Equipped Items -->
+                <div id="pause-equipped-items" class="pause-items-column"></div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="pause-buttons">
+                <button id="resume-btn" class="pause-btn primary">▶️ Resume</button>
+                <button id="restart-from-pause-btn" class="pause-btn secondary">🔄 Restart Game</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <!-- Configuration -->
     <script src="config.js"></script>
@@ -206,6 +230,7 @@
     <script src="ui/HealthBar.js"></script>
     <script src="ui/GameOverScreen.js"></script>
     <script src="ui/ShopScreen.js"></script>
+    <script src="ui/PauseMenu.js"></script>
     
     <!-- Game Entities -->
     <script src="game/Player.js"></script>
