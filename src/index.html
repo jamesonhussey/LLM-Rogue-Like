@@ -12,6 +12,17 @@
     <!-- Game Canvas Container -->
     <div id="game-container"></div>
 
+    <!-- Round HUD (top-center) -->
+    <div id="round-hud" class="round-hud">
+        <div class="round-info">
+            <span id="round-number">Round: 1</span>
+            <span class="separator">|</span>
+            <span id="round-timer">Time: 30s</span>
+            <span class="separator">|</span>
+            <span id="enemy-count">Enemies: 0</span>
+        </div>
+    </div>
+
     <!-- UI Panel (toggleable) -->
     <div id="ui-panel" class="ui-panel">
         <button id="toggle-ui-btn" class="toggle-ui-btn">📦</button>
@@ -99,6 +110,15 @@
         </div> <!-- end ui-content -->
     </div> <!-- end ui-panel -->
 
+    <!-- Between Rounds Modal -->
+    <div id="between-rounds-modal" class="modal" style="display: none;">
+        <div class="modal-content between-rounds-content">
+            <h1 class="between-rounds-title" id="round-complete-number">Round 1 Complete!</h1>
+            <p class="between-rounds-text">Use the item fusion panel to combine and equip items!</p>
+            <button id="start-next-round-btn" class="start-round-btn">🚀 Ready for Next Round</button>
+        </div>
+    </div>
+
     <!-- Game Over Modal -->
     <div id="game-over-modal" class="modal" style="display: none;">
         <div class="modal-content game-over-content">
@@ -127,6 +147,10 @@
     <!-- UI Screens -->
     <script src="ui/HealthBar.js"></script>
     <script src="ui/GameOverScreen.js"></script>
+    <script src="ui/BetweenRoundsScreen.js"></script>
+    
+    <!-- Game Managers -->
+    <script src="game/WaveManager.js"></script>
     
     <!-- Scenes -->
     <script src="scenes/GameScene.js"></script>

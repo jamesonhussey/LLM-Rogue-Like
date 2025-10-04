@@ -37,6 +37,9 @@ class GameScene extends Phaser.Scene {
         const weapon = new Weapon(this, this.player, this.projectileManager, this.enemyManager);
         this.player.setWeapon(weapon);
 
+        // Initialize Wave Manager
+        this.waveManager = new WaveManager(this, this.enemyManager);
+
         // Setup collisions
         this.setupCollisions();
 
@@ -66,8 +69,22 @@ class GameScene extends Phaser.Scene {
         // Game state
         this.isGameOver = false;
 
-        // Initialize Game Over Screen
+        // Initialize UI Screens
         this.gameOverScreen = new GameOverScreen(() => this.restartGame());
+        this.betweenRoundsScreen = new BetweenRoundsScreen(() => this.startNextRound());
+
+        // Round HUD elements
+        this.roundNumberText = document.getElementById('round-number');
+        this.roundTimerText = document.getElementById('round-timer');
+        this.enemyCountText = document.getElementById('enemy-count');
+
+        // Listen for round complete event
+        this.events.on('roundComplete', (roundNumber) => {
+            this.onRoundComplete(roundNumber);
+        });
+
+        // Start first round
+        this.waveManager.startRound();
 
         console.log('✅ Game scene created');
     }
@@ -163,11 +180,19 @@ class GameScene extends Phaser.Scene {
             this.player.stats.currentHealth = 0;
             console.log('☠️ Player killed (K key - testing game over)');
         });
+
+        // N key: Force next round (skip to between rounds)
+        this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.N).on('down', () => {
+            if (this.waveManager.isRoundActive) {
+                this.waveManager.roundTimeRemaining = 0;
+                console.log('⏩ Forcing round end (N key)');
+            }
+        });
     }
 
     update(time, delta) {
-        // Stop updates if game over
-        if (this.isGameOver) {
+        // Stop updates if game over or between rounds
+        if (this.isGameOver || this.betweenRoundsScreen.isVisible()) {
             return;
         }
 
@@ -176,6 +201,9 @@ class GameScene extends Phaser.Scene {
             this.triggerGameOver();
             return;
         }
+
+        // Update wave manager (handles round timer, wave spawning)
+        this.waveManager.update(delta);
 
         // Update player
         this.player.update(this.cursors, this.wasd);
@@ -194,6 +222,7 @@ class GameScene extends Phaser.Scene {
 
         // Update UI
         this.healthBar.update(this.player.stats.currentHealth, this.player.stats.maxHealth);
+        this.updateRoundHUD();
         this.updateDebugText();
     }
 
@@ -237,6 +266,10 @@ class GameScene extends Phaser.Scene {
             }
         });
 
+        // Reset wave manager and start from round 1
+        this.waveManager.currentRound = 0; // Will become 1 when startRound() is called
+        this.waveManager.startRound();
+
         console.log('✅ Game restarted');
     }
 
@@ -248,6 +281,9 @@ class GameScene extends Phaser.Scene {
             ? `Nearest Enemy: ${Math.round(Phaser.Math.Distance.Between(playerPos.x, playerPos.y, nearestEnemy.sprite.x, nearestEnemy.sprite.y))}px`
             : 'No enemies';
 
+        const roundInfo = this.waveManager.getRoundInfo();
+        const graceStatus = this.waveManager.isInGracePeriod() ? ' [GRACE]' : '';
+
         this.debugText.setText([
             `=== PLAYER STATS ===`,
             `Position: (${Math.round(playerPos.x)}, ${Math.round(playerPos.y)})`,
@@ -256,13 +292,67 @@ class GameScene extends Phaser.Scene {
             `Damage: +${stats.damageBonus} | Crit: ${stats.critChance}% | Atk Speed: ${stats.attackSpeed}`,
             `Luck: ${stats.luck} | XP Gain: ${stats.xp_gain}x | Pickup: ${stats.pickup_range}`,
             ``,
-            `=== GAME INFO ===`,
-            `Enemies: ${this.enemyManager.getCount()} | Projectiles: ${this.projectileManager.getCount()}`,
+            `=== WAVE INFO ===`,
+            `Round: ${roundInfo.roundNumber} | Time: ${roundInfo.timeRemaining}s${graceStatus}`,
+            `Wave: ${this.waveManager.currentWaveInRound} | Enemies: ${roundInfo.enemyCount} | Projectiles: ${this.projectileManager.getCount()}`,
             enemyInfo,
             '',
             'Controls: WASD or Arrow Keys',
-            'Press E to spawn enemy | Press K to test game over'
+            'E: spawn enemy | K: game over | N: next round'
         ]);
+    }
+
+    updateRoundHUD() {
+        const roundInfo = this.waveManager.getRoundInfo();
+        
+        if (this.roundNumberText) {
+            this.roundNumberText.textContent = `Round: ${roundInfo.roundNumber}`;
+        }
+        if (this.roundTimerText) {
+            this.roundTimerText.textContent = `Time: ${roundInfo.timeRemaining}s`;
+        }
+        if (this.enemyCountText) {
+            this.enemyCountText.textContent = `Enemies: ${roundInfo.enemyCount}`;
+        }
+    }
+
+    onRoundComplete(roundNumber) {
+        console.log(`🎉 Round ${roundNumber} complete event received`);
+        
+        // Clear all projectiles
+        this.projectileManager.projectiles.forEach(projectile => {
+            if (projectile.isActive) {
+                projectile.destroy();
+            }
+        });
+        console.log('   🧹 Cleared all projectiles');
+        
+        // Pause physics
+        this.physics.pause();
+
+        // Show between rounds screen
+        this.betweenRoundsScreen.show(roundNumber);
+    }
+
+    startNextRound() {
+        console.log('▶️ Starting next round...');
+        
+        // Reset player position to center
+        const width = this.scale.width;
+        const height = this.scale.height;
+        this.player.sprite.setPosition(width / 2, height / 2);
+        this.player.sprite.body.setVelocity(0, 0);
+        console.log('   📍 Player repositioned to center');
+        
+        // Heal player to full health
+        this.player.stats.currentHealth = this.player.stats.maxHealth;
+        console.log(`   💚 Player healed to full (${this.player.stats.maxHealth} HP)`);
+        
+        // Resume physics
+        this.physics.resume();
+
+        // Start next round
+        this.waveManager.startRound();
     }
 
     // Public method to apply item effects to player

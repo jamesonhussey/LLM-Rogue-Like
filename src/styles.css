@@ -681,6 +681,91 @@ button {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
+/* Round HUD (Top Center) */
+.round-hud {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 900;
+    pointer-events: none;
+}
+
+.round-info {
+    background: rgba(22, 33, 62, 0.9);
+    backdrop-filter: blur(10px);
+    padding: 15px 30px;
+    border-radius: 12px;
+    border: 2px solid var(--color-accent);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.round-info span {
+    color: var(--color-text);
+}
+
+.round-info .separator {
+    color: var(--color-accent);
+    font-weight: normal;
+}
+
+#round-timer {
+    color: var(--color-uncommon);
+}
+
+#enemy-count {
+    color: var(--color-rare);
+}
+
+/* Between Rounds Modal */
+.between-rounds-content {
+    text-align: center;
+    padding: 50px 30px;
+}
+
+.between-rounds-title {
+    font-size: 3em;
+    margin-bottom: 20px;
+    background: linear-gradient(45deg, var(--color-uncommon), var(--color-rare));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.between-rounds-text {
+    font-size: 1.2em;
+    color: var(--color-text-dim);
+    margin-bottom: 30px;
+}
+
+.start-round-btn {
+    padding: 15px 40px;
+    font-size: 1.3em;
+    background: linear-gradient(135deg, var(--color-uncommon), var(--color-rare));
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    font-weight: bold;
+}
+
+.start-round-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.start-round-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .selection-area {
