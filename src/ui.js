@@ -367,7 +367,19 @@ class UI {
             </div>
             
             ${parentInfo}
+            
+            <button class="equip-btn" data-item-id="${item.id}">
+                ⚔️ Equip Item
+            </button>
         `;
+
+        // Add click listener to equip button
+        const equipBtn = detailContent.querySelector('.equip-btn');
+        if (equipBtn) {
+            equipBtn.addEventListener('click', () => {
+                this.equipItem(item);
+            });
+        }
 
         modal.style.display = 'flex';
     }
@@ -376,6 +388,49 @@ class UI {
     closeItemDetail() {
         const modal = document.getElementById('item-detail-modal');
         modal.style.display = 'none';
+    }
+
+    // Equip item to player
+    equipItem(item) {
+        // Check if game is available
+        if (typeof game === 'undefined' || !game.scene || !game.scene.scenes[0]) {
+            console.error('❌ Game not initialized yet');
+            alert('Game not ready! Please wait for the game to load.');
+            return;
+        }
+
+        // Get the game scene
+        const gameScene = game.scene.scenes[0];
+        
+        if (!gameScene.applyItemEffectsToPlayer) {
+            console.error('❌ Game scene does not have applyItemEffectsToPlayer method');
+            alert('Cannot equip item - game scene not ready');
+            return;
+        }
+
+        // Apply item effects to player
+        gameScene.applyItemEffectsToPlayer(item);
+
+        // Close modal
+        this.closeItemDetail();
+
+        // Show feedback
+        console.log(`✅ Equipped: ${item.name}`);
+        
+        // Visual feedback
+        const notification = document.createElement('div');
+        notification.className = 'equip-notification';
+        notification.textContent = `⚔️ Equipped: ${item.name}`;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 10);
+        
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, 2000);
     }
 }
 

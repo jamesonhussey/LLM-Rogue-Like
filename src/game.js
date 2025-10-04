@@ -24,11 +24,9 @@ const gameConfig = {
 
 // Initialize game when DOM is ready
 window.addEventListener('load', () => {
-    const game = new Phaser.Game(gameConfig);
+    window.game = new Phaser.Game(gameConfig);
     
-    // Make game instance accessible globally for debugging
-    window.phaserGame = game;
-    
+    // Make game instance accessible globally (for UI and debugging)
     console.log('🎮 Phaser game initialized');
 });
 

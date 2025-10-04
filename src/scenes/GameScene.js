@@ -242,15 +242,21 @@ class GameScene extends Phaser.Scene {
 
     updateDebugText() {
         const playerPos = this.player.getPosition();
+        const stats = this.player.stats;
         const nearestEnemy = this.enemyManager.findNearest(playerPos.x, playerPos.y);
         const enemyInfo = nearestEnemy 
             ? `Nearest Enemy: ${Math.round(Phaser.Math.Distance.Between(playerPos.x, playerPos.y, nearestEnemy.sprite.x, nearestEnemy.sprite.y))}px`
             : 'No enemies';
 
         this.debugText.setText([
-            `Player: (${Math.round(playerPos.x)}, ${Math.round(playerPos.y)})`,
-            `Health: ${this.player.stats.currentHealth}/${this.player.stats.maxHealth}`,
-            `Damage: ${this.player.stats.damageBonus} | Attack Speed: ${this.player.stats.attackSpeed}`,
+            `=== PLAYER STATS ===`,
+            `Position: (${Math.round(playerPos.x)}, ${Math.round(playerPos.y)})`,
+            `Health: ${Math.round(stats.currentHealth)}/${stats.maxHealth} | Regen: ${stats.healthRegen}`,
+            `Speed: ${stats.speed} | Armor: ${stats.armor} | Dodge: ${stats.dodge}%`,
+            `Damage: +${stats.damageBonus} | Crit: ${stats.critChance}% | Atk Speed: ${stats.attackSpeed}`,
+            `Luck: ${stats.luck} | XP Gain: ${stats.xp_gain}x | Pickup: ${stats.pickup_range}`,
+            ``,
+            `=== GAME INFO ===`,
             `Enemies: ${this.enemyManager.getCount()} | Projectiles: ${this.projectileManager.getCount()}`,
             enemyInfo,
             '',
