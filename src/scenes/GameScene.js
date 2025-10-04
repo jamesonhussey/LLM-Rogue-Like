@@ -164,8 +164,14 @@ class GameScene extends Phaser.Scene {
             return;
         }
 
+        const damage = projectile.getDamage();
+        const isCrit = false; // Will be calculated later when we add crit system
+
         // Apply damage
-        enemy.takeDamage(projectile.getDamage());
+        enemy.takeDamage(damage);
+
+        // Show damage number at enemy position
+        this.showDamageNumber(enemy.sprite.x, enemy.sprite.y, damage, isCrit);
 
         // Destroy projectile
         projectile.destroy();
@@ -366,6 +372,36 @@ class GameScene extends Phaser.Scene {
         if (this.currencyText) {
             this.currencyText.setText(`💰 ${this.player.stats.currency}`);
         }
+    }
+
+    showDamageNumber(x, y, damage, isCrit = false) {
+        // Create text at enemy position
+        const color = isCrit ? '#ffd700' : '#ffffff';
+        const fontSize = isCrit ? '24px' : '18px';
+        const displayText = isCrit ? `${damage} ★` : `${damage}`;
+        
+        // Random horizontal offset to prevent stacking
+        const offsetX = Phaser.Math.Between(-10, 10);
+        
+        const damageText = this.add.text(x + offsetX, y, displayText, {
+            fontSize: fontSize,
+            fill: color,
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 3
+        }).setOrigin(0.5, 0.5);
+        
+        // Animate: float up + fade out
+        this.tweens.add({
+            targets: damageText,
+            y: y - 60,  // Float upward 60 pixels
+            alpha: 0,   // Fade to invisible
+            duration: 1000,  // Over 1 second
+            ease: 'Power2',
+            onComplete: () => {
+                damageText.destroy();  // Clean up
+            }
+        });
     }
 
     togglePause() {
