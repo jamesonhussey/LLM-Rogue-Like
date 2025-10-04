@@ -164,8 +164,17 @@ class GameScene extends Phaser.Scene {
             return;
         }
 
-        const damage = projectile.getDamage();
-        const isCrit = false; // Will be calculated later when we add crit system
+        // Get base damage
+        let damage = projectile.getDamage();
+        
+        // Calculate if this hit is a crit
+        const critChance = this.player.stats.critChance;
+        const isCrit = Math.random() * 100 < critChance;
+        
+        // Apply crit multiplier (2x damage)
+        if (isCrit) {
+            damage = Math.round(damage * 2);
+        }
 
         // Apply damage
         enemy.takeDamage(damage);
