@@ -32,6 +32,7 @@ class GameScene extends Phaser.Scene {
         this.player = new Player(this, width / 2, height / 2);
         this.enemyManager = new EnemyManager(this);
         this.projectileManager = new ProjectileManager(this);
+        this.currencyManager = new CurrencyManager(this);
 
         // Give player a weapon
         const weapon = new Weapon(this, this.player, this.projectileManager, this.enemyManager);
@@ -58,6 +59,15 @@ class GameScene extends Phaser.Scene {
         // Create UI elements
         this.healthBar = new HealthBar(this, 15, 20);
 
+        // Currency UI (top-right corner)
+        this.currencyText = this.add.text(width - 15, 20, '💰 0', {
+            fontSize: '20px',
+            fill: '#ffd700',
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 3
+        }).setOrigin(1, 0).setScrollFactor(0); // Anchor to top-right, fixed to camera
+
         // Debug text (moved down to not overlap health bar)
         this.debugText = this.add.text(10, 90, '', {
             fontSize: '14px',
@@ -71,7 +81,7 @@ class GameScene extends Phaser.Scene {
 
         // Initialize UI Screens
         this.gameOverScreen = new GameOverScreen(() => this.restartGame());
-        this.betweenRoundsScreen = new BetweenRoundsScreen(() => this.startNextRound());
+        this.shopScreen = new ShopScreen(() => this.startNextRound());
 
         // Round HUD elements
         this.roundNumberText = document.getElementById('round-number');
@@ -118,6 +128,17 @@ class GameScene extends Phaser.Scene {
         this.physics.add.collider(
             this.enemyManager.enemyGroup,
             this.enemyManager.enemyGroup
+        );
+
+        // Overlap between player and currency (pickup)
+        this.physics.add.overlap(
+            this.player.sprite,
+            this.currencyManager.getGroup(),
+            (playerSprite, currencySprite) => {
+                this.currencyManager.onCurrencyPickup(playerSprite, currencySprite);
+            },
+            null,
+            this
         );
 
         // Track time between enemy damage to player (cooldown)
@@ -191,8 +212,8 @@ class GameScene extends Phaser.Scene {
     }
 
     update(time, delta) {
-        // Stop updates if game over or between rounds
-        if (this.isGameOver || this.betweenRoundsScreen.isVisible()) {
+        // Stop updates if game over or in shop
+        if (this.isGameOver || this.shopScreen.isVisible()) {
             return;
         }
 
@@ -219,6 +240,9 @@ class GameScene extends Phaser.Scene {
         // Update enemies (pass player position for chasing)
         const playerPos = this.player.getPosition();
         this.enemyManager.update(playerPos.x, playerPos.y);
+
+        // Update currency (magnetic pull toward player)
+        this.currencyManager.update(playerPos.x, playerPos.y, this.player.stats.pickup_range);
 
         // Update UI
         this.healthBar.update(this.player.stats.currentHealth, this.player.stats.maxHealth);
@@ -251,6 +275,7 @@ class GameScene extends Phaser.Scene {
         this.player.sprite.setPosition(width / 2, height / 2);
         this.player.sprite.body.setVelocity(0, 0);
         this.player.stats.currentHealth = this.player.stats.maxHealth;
+        this.player.stats.currency = 0; // Reset currency on full game restart
 
         // Clear all enemies
         this.enemyManager.getEnemies().forEach(enemy => {
@@ -265,6 +290,12 @@ class GameScene extends Phaser.Scene {
                 projectile.destroy();
             }
         });
+
+        // Clear all currency drops
+        this.currencyManager.clearAll();
+
+        // Clear player's run inventory (items they've bought this run)
+        itemStorage.clearPlayerRunInventory();
 
         // Reset wave manager and start from round 1
         this.waveManager.currentRound = 0; // Will become 1 when startRound() is called
@@ -291,6 +322,7 @@ class GameScene extends Phaser.Scene {
             `Speed: ${stats.speed} | Armor: ${stats.armor} | Dodge: ${stats.dodge}%`,
             `Damage: +${stats.damageBonus} | Crit: ${stats.critChance}% | Atk Speed: ${stats.attackSpeed}`,
             `Luck: ${stats.luck} | XP Gain: ${stats.xp_gain}x | Pickup: ${stats.pickup_range}`,
+            `Currency: 💰 ${stats.currency}`,
             ``,
             `=== WAVE INFO ===`,
             `Round: ${roundInfo.roundNumber} | Time: ${roundInfo.timeRemaining}s${graceStatus}`,
@@ -316,6 +348,12 @@ class GameScene extends Phaser.Scene {
         }
     }
 
+    updateCurrencyUI() {
+        if (this.currencyText) {
+            this.currencyText.setText(`💰 ${this.player.stats.currency}`);
+        }
+    }
+
     onRoundComplete(roundNumber) {
         console.log(`🎉 Round ${roundNumber} complete event received`);
         
@@ -330,8 +368,9 @@ class GameScene extends Phaser.Scene {
         // Pause physics
         this.physics.pause();
 
-        // Show between rounds screen
-        this.betweenRoundsScreen.show(roundNumber);
+        // Show shop screen (only after Round 1+, always show for now)
+        const itemPool = itemStorage.getAllItems(); // Get all discovered items
+        this.shopScreen.show(roundNumber, this.player.stats.currency, itemPool);
     }
 
     startNextRound() {

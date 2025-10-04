@@ -23,12 +23,13 @@ class Player {
             damageBonus: 0,
             armor: 0,
             critChance: 0,
-            attackSpeed: 1,
+            attackSpeed: 10,
             healthRegen: 0,
             dodge: 0,
             luck: 0,
             pickup_range: 100,
-            xp_gain: 1
+            xp_gain: 1,
+            currency: 0 // Gold collected
         };
 
         // Weapon will be set by GameScene

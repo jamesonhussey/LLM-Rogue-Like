@@ -766,6 +766,372 @@ button {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
+/* Shop Modal Styles */
+.shop-modal-content {
+    max-width: 1200px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.shop-title {
+    text-align: center;
+    font-size: 2.5em;
+    margin-bottom: 15px;
+    background: linear-gradient(45deg, var(--color-uncommon), var(--color-rare));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.shop-currency-header {
+    text-align: center;
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #ffd700;
+    margin-bottom: 25px;
+    text-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+}
+
+.shop-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+/* Shop Column */
+.shop-column {
+    background: rgba(15, 52, 96, 0.3);
+    padding: 20px;
+    border-radius: 12px;
+    border: 2px solid var(--color-accent);
+}
+
+.shop-column h2 {
+    margin-bottom: 20px;
+    color: var(--color-uncommon);
+}
+
+.shop-items-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.shop-item-card {
+    background: rgba(22, 33, 62, 0.8);
+    border: 2px solid var(--color-accent);
+    border-radius: 8px;
+    padding: 15px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.shop-item-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+}
+
+.shop-item-card.common { border-color: var(--color-common); }
+.shop-item-card.uncommon { border-color: var(--color-uncommon); }
+.shop-item-card.rare { border-color: var(--color-rare); }
+.shop-item-card.epic { border-color: var(--color-epic); }
+.shop-item-card.legendary { border-color: var(--color-legendary); }
+
+.shop-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.shop-item-name {
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.shop-item-description {
+    font-size: 0.9em;
+    color: var(--color-text-dim);
+    margin-bottom: 12px;
+    font-style: italic;
+}
+
+.shop-item-effects {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 12px;
+    font-size: 0.85em;
+}
+
+.effect-line.positive {
+    color: var(--color-uncommon);
+}
+
+.effect-line.negative {
+    color: #f44336;
+}
+
+.no-effects {
+    color: var(--color-text-dim);
+    font-style: italic;
+}
+
+.shop-item-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.shop-item-cost {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #ffd700;
+}
+
+.shop-buy-btn {
+    padding: 8px 20px;
+    background: linear-gradient(135deg, var(--color-uncommon), var(--color-rare));
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.shop-buy-btn:hover:not(.disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.shop-buy-btn.disabled {
+    background: #555;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.reroll-btn {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, var(--color-accent), var(--color-rare));
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.1em;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.reroll-btn:hover:not(.disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.reroll-btn.disabled {
+    background: #555;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* Crafting Column */
+.crafting-column {
+    background: rgba(15, 52, 96, 0.3);
+    padding: 20px;
+    border-radius: 12px;
+    border: 2px solid var(--color-accent);
+}
+
+.crafting-column h2 {
+    margin-bottom: 10px;
+    color: var(--color-rare);
+}
+
+.crafting-subtitle {
+    color: var(--color-text-dim);
+    margin-bottom: 20px;
+    font-size: 0.9em;
+}
+
+.crafting-selectors {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.crafting-item-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.crafting-item-selector label {
+    font-weight: bold;
+}
+
+.crafting-item-selector select {
+    padding: 10px;
+    background: rgba(22, 33, 62, 0.8);
+    color: var(--color-text);
+    border: 2px solid var(--color-accent);
+    border-radius: 6px;
+    font-size: 1em;
+}
+
+.shop-combine-btn {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, var(--color-rare), var(--color-epic));
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.2em;
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-bottom: 20px;
+}
+
+.shop-combine-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.shop-combine-btn:disabled {
+    background: #555;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.shop-crafting-result {
+    background: rgba(22, 33, 62, 0.8);
+    border: 2px solid var(--color-uncommon);
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.crafted-item-display {
+    margin-bottom: 20px;
+}
+
+.crafting-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.craft-option-btn {
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1em;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.craft-option-btn.primary {
+    background: linear-gradient(135deg, var(--color-uncommon), var(--color-rare));
+    color: white;
+}
+
+.craft-option-btn.secondary {
+    background: linear-gradient(135deg, var(--color-accent), var(--color-rare));
+    color: white;
+}
+
+.craft-option-btn.danger {
+    background: linear-gradient(135deg, #666, #333);
+    color: white;
+}
+
+.craft-option-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+#shop-crafting-loading {
+    text-align: center;
+    padding: 20px;
+}
+
+.spinner-small {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-top-color: var(--color-rare);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px auto;
+}
+
+/* Shop Player Inventory Display */
+.shop-player-inventory {
+    margin-top: 30px;
+    padding-top: 30px;
+    border-top: 2px solid var(--color-accent);
+}
+
+.shop-player-inventory h3 {
+    text-align: center;
+    color: var(--color-uncommon);
+    margin-bottom: 20px;
+    font-size: 1.5em;
+}
+
+.shop-inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.shop-inventory-item {
+    background: rgba(22, 33, 62, 0.6);
+    border: 2px solid var(--color-accent);
+    border-radius: 8px;
+    padding: 15px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.shop-inventory-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.shop-inventory-item.common { border-color: var(--color-common); }
+.shop-inventory-item.uncommon { border-color: var(--color-uncommon); }
+.shop-inventory-item.rare { border-color: var(--color-rare); }
+.shop-inventory-item.epic { border-color: var(--color-epic); }
+.shop-inventory-item.legendary { border-color: var(--color-legendary); }
+
+.shop-inventory-item-name {
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.shop-inventory-item-effects {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.85em;
+}
+
+.shop-inventory-empty {
+    text-align: center;
+    padding: 40px;
+    color: var(--color-text-dim);
+    font-style: italic;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .selection-area {
@@ -792,6 +1158,14 @@ button {
     .modal-content {
         width: 95%;
         padding: 20px;
+    }
+
+    .shop-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .shop-items-grid {
+        grid-template-columns: 1fr;
     }
 }
 

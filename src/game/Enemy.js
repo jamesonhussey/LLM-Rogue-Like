@@ -91,6 +91,11 @@ class Enemy {
         
         this.isAlive = false;
         
+        // Drop currency at death position
+        if (this.scene.currencyManager) {
+            this.scene.currencyManager.spawn(this.sprite.x, this.sprite.y, 10); // 10 gold per enemy
+        }
+        
         // Remove health bar
         this.healthBarBg.destroy();
         this.healthBarFill.destroy();

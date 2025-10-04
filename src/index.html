@@ -23,8 +23,8 @@
         </div>
     </div>
 
-    <!-- UI Panel (toggleable) -->
-    <div id="ui-panel" class="ui-panel">
+    <!-- UI Panel (HIDDEN - crafting now in shop modal) -->
+    <div id="ui-panel" class="ui-panel" style="display: none;">
         <button id="toggle-ui-btn" class="toggle-ui-btn">📦</button>
         
         <div id="ui-content" class="ui-content">
@@ -110,12 +110,74 @@
         </div> <!-- end ui-content -->
     </div> <!-- end ui-panel -->
 
-    <!-- Between Rounds Modal -->
-    <div id="between-rounds-modal" class="modal" style="display: none;">
-        <div class="modal-content between-rounds-content">
-            <h1 class="between-rounds-title" id="round-complete-number">Round 1 Complete!</h1>
-            <p class="between-rounds-text">Use the item fusion panel to combine and equip items!</p>
-            <button id="start-next-round-btn" class="start-round-btn">🚀 Ready for Next Round</button>
+    <!-- Shop + Crafting Modal (Between Rounds) -->
+    <div id="shop-modal" class="modal" style="display: none;">
+        <div class="modal-content shop-modal-content">
+            <h1 class="shop-title" id="shop-round-number">Round 1 Complete!</h1>
+            <div class="shop-currency-header">
+                <span id="shop-currency-display">💰 0</span>
+            </div>
+            
+            <div class="shop-layout">
+                <!-- Left Column: Shop -->
+                <div class="shop-column">
+                    <h2>🛒 Shop</h2>
+                    <div id="shop-items" class="shop-items-grid"></div>
+                    <button id="reroll-shop-btn" class="reroll-btn">🔄 Reroll Shop (💰 10)</button>
+                </div>
+
+                <!-- Right Column: Crafting -->
+                <div class="crafting-column">
+                    <h2>🔮 Item Fusion</h2>
+                    <p class="crafting-subtitle">Combine items to create new ones</p>
+                    
+                    <!-- Item selectors -->
+                    <div class="crafting-selectors">
+                        <div class="crafting-item-selector">
+                            <label for="shop-item1-select">Item 1:</label>
+                            <select id="shop-item1-select">
+                                <option value="">-- Select Item --</option>
+                            </select>
+                        </div>
+
+                        <div class="crafting-item-selector">
+                            <label for="shop-item2-select">Item 2:</label>
+                            <select id="shop-item2-select">
+                                <option value="">-- Select Item --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button id="shop-combine-btn" class="shop-combine-btn">🔮 Combine (💰 50)</button>
+
+                    <!-- Crafting result area -->
+                    <div id="shop-crafting-result" class="shop-crafting-result" style="display: none;">
+                        <div class="crafted-item-display" id="crafted-item-display"></div>
+                        <div class="crafting-options">
+                            <button id="craft-buy-equip-btn" class="craft-option-btn primary">Buy & Equip</button>
+                            <button id="craft-add-pool-btn" class="craft-option-btn secondary">Add to Pool</button>
+                            <button id="craft-discard-btn" class="craft-option-btn danger">Discard</button>
+                        </div>
+                    </div>
+
+                    <!-- Loading state for crafting -->
+                    <div id="shop-crafting-loading" style="display: none;">
+                        <div class="spinner-small"></div>
+                        <p>🤖 Crafting with LLM...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom: Ready button -->
+            <button id="start-next-round-from-shop-btn" class="start-round-btn">🚀 Ready for Next Round</button>
+
+            <!-- Player Inventory Display (below ready button) -->
+            <div class="shop-player-inventory">
+                <h3>📦 Your Current Items</h3>
+                <div id="shop-player-inventory-list" class="shop-inventory-grid">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
         </div>
     </div>
 
@@ -129,27 +191,31 @@
     </div>
 
     <!-- Scripts -->
-    <!-- Item Fusion System -->
+    <!-- Configuration -->
     <script src="config.js"></script>
-    <script src="startingItems.js"></script>
-    <script src="itemStorage.js"></script>
-    <script src="itemFusionPrompt.js"></script>
-    <script src="itemGenerator.js"></script>
-    <script src="ui.js"></script>
     
-    <!-- Game System -->
+    <!-- Item System -->
+    <script src="items/startingItems.js"></script>
+    <script src="items/itemStorage.js"></script>
+    <script src="items/itemFusionPrompt.js"></script>
+    <script src="items/itemGenerator.js"></script>
+    
+    <!-- UI Components -->
+    <script src="ui/ItemDetailModal.js"></script>
+    <script src="ui/ShopCraftingUI.js"></script>
+    <script src="ui/HealthBar.js"></script>
+    <script src="ui/GameOverScreen.js"></script>
+    <script src="ui/ShopScreen.js"></script>
+    
     <!-- Game Entities -->
     <script src="game/Player.js"></script>
     <script src="game/Enemy.js"></script>
     <script src="game/Projectile.js"></script>
     <script src="game/Weapon.js"></script>
-    
-    <!-- UI Screens -->
-    <script src="ui/HealthBar.js"></script>
-    <script src="ui/GameOverScreen.js"></script>
-    <script src="ui/BetweenRoundsScreen.js"></script>
+    <script src="game/Currency.js"></script>
     
     <!-- Game Managers -->
+    <script src="game/CurrencyManager.js"></script>
     <script src="game/WaveManager.js"></script>
     
     <!-- Scenes -->
@@ -157,6 +223,16 @@
     
     <!-- Game Initialization -->
     <script src="game.js"></script>
+    
+    <!-- Initialize UI Components -->
+    <script>
+        // Initialize UI components after all scripts are loaded
+        const itemDetailModal = new ItemDetailModal();
+        const shopCraftingUI = new ShopCraftingUI();
+        
+        // Backwards compatibility: legacy 'ui' reference for ShopScreen
+        const ui = shopCraftingUI;
+    </script>
 </body>
 </html>
 
