@@ -80,6 +80,9 @@ class GameScene extends Phaser.Scene {
         this.isGameOver = false;
         this.isPaused = false;
 
+        // Health regeneration tracking
+        this.lastHealthRegenTime = 0;
+
         // Initialize UI Screens
         this.gameOverScreen = new GameOverScreen(() => this.restartGame());
         this.shopScreen = new ShopScreen(() => this.startNextRound());
@@ -246,6 +249,28 @@ class GameScene extends Phaser.Scene {
             return;
         }
 
+        // Health regeneration
+        if (this.player.stats.healthRegen > 0 && 
+            this.player.stats.currentHealth < this.player.stats.maxHealth) {
+            
+            // Recalculate interval based on current HP_Regen stat (always up-to-date!)
+            const regenInterval = this.calculateHealthRegenInterval();
+            
+            if (this.time.now >= this.lastHealthRegenTime + regenInterval) {
+                // Heal 1 HP
+                this.player.stats.currentHealth = Math.min(
+                    this.player.stats.currentHealth + 1,
+                    this.player.stats.maxHealth
+                );
+                
+                // Show heal effect at player position
+                this.showHealEffect(this.player.sprite.x, this.player.sprite.y);
+                
+                // Reset timer
+                this.lastHealthRegenTime = this.time.now;
+            }
+        }
+
         // Check for game over
         if (this.player.stats.currentHealth <= 0) {
             this.triggerGameOver();
@@ -383,6 +408,17 @@ class GameScene extends Phaser.Scene {
         }
     }
 
+    calculateHealthRegenInterval() {
+        const hpRegen = this.player.stats.healthRegen;
+        
+        // Brotato formula: seconds to regenerate 1 HP
+        // HPEveryXSeconds = 5.0 / (1.0 + ((HP_Regen - 1) / 2.25))
+        const secondsPer1HP = 5.0 / (1.0 + ((hpRegen - 1) / 2.25));
+        
+        // Convert to milliseconds
+        return secondsPer1HP * 1000;
+    }
+
     showDamageNumber(x, y, damage, isCrit = false) {
         // Create text at enemy position
         const color = isCrit ? '#ffd700' : '#ffffff';
@@ -409,6 +445,32 @@ class GameScene extends Phaser.Scene {
             ease: 'Power2',
             onComplete: () => {
                 damageText.destroy();  // Clean up
+            }
+        });
+    }
+
+    showHealEffect(x, y) {
+        // Random horizontal offset to prevent stacking
+        const offsetX = Phaser.Math.Between(-10, 10);
+        
+        const healText = this.add.text(x + offsetX, y, '+', {
+            fontSize: '20px',
+            fill: '#4caf50', // Green
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 3
+        }).setOrigin(0.5, 0.5);
+        
+        // Animate: float up + fade out + scale pulse
+        this.tweens.add({
+            targets: healText,
+            y: y - 50,  // Float upward 50 pixels
+            alpha: 0,   // Fade to invisible
+            scale: 0.8, // Scale pulse from 1.0 to 0.8
+            duration: 800,  // Slightly faster than damage numbers
+            ease: 'Power2',
+            onComplete: () => {
+                healText.destroy();  // Clean up
             }
         });
     }
