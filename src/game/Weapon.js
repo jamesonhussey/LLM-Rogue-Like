@@ -35,15 +35,16 @@ class Weapon {
             return; // No target
         }
 
-        // Fire at enemy
-        const enemyPos = nearestEnemy.getPosition();
+        // Fire at enemy's physics body center (not sprite center)
+        const targetX = nearestEnemy.sprite.body.x + nearestEnemy.sprite.body.halfWidth;
+        const targetY = nearestEnemy.sprite.body.y + nearestEnemy.sprite.body.halfHeight;
         const damage = this.calculateDamage();
         
         this.projectileManager.fire(
             ownerPos.x,
             ownerPos.y,
-            enemyPos.x,
-            enemyPos.y,
+            targetX,
+            targetY,
             damage
         );
 

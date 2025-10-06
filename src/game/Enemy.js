@@ -5,14 +5,22 @@ class Enemy {
     constructor(scene, x, y) {
         this.scene = scene;
         
-        // Create enemy sprite (red circle)
-        this.sprite = scene.add.circle(x, y, 12, 0xff4444);
+        // Create enemy sprite (mummy, 64x64)
+        this.sprite = scene.add.sprite(x, y, 'mummy', 0);
         scene.physics.add.existing(this.sprite);
         this.sprite.body.setCollideWorldBounds(true);
         
-        // Set smaller collision body (80% of visual size for better overlap)
-        this.sprite.body.setCircle(9.5); // Visual radius 12, physics radius 9.5
+        // Manual collision body setup
+        const hitboxRadius = 12; // Physics radius
+        const spriteSize = 64; // 64x64 sprite
+        const circleOffsetX = ((spriteSize - hitboxRadius * 2) / 2) + 5; // Center horizontally
+        const circleOffsetY = ((spriteSize - hitboxRadius * 2) / 2) + 17; // Center vertically
+        
+        this.sprite.body.setCircle(hitboxRadius, circleOffsetX, circleOffsetY);
         this.sprite.body.setBounce(0.3); // Slight bounce to separate overlapping enemies
+        
+        // Play walk animation
+        this.sprite.play('mummy_walk');
 
         // Enemy stats
         this.maxHealth = 50;
@@ -54,6 +62,14 @@ class Enemy {
                 Math.cos(angle) * this.speed,
                 Math.sin(angle) * this.speed
             );
+            
+            // Flip sprite based on horizontal movement direction
+            if (this.sprite.body.velocity.x < 0) {
+                this.sprite.setFlipX(true);  // Moving left - flip
+            } else if (this.sprite.body.velocity.x > 0) {
+                this.sprite.setFlipX(false); // Moving right - don't flip
+            }
+            // If velocity.x === 0 (moving straight up/down), keep current facing
         }
 
         // Update health bar position to follow enemy

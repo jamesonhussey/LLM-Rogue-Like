@@ -16,6 +16,12 @@ class GameScene extends Phaser.Scene {
             frameWidth: 32,
             frameHeight: 32
         });
+        
+        // Load enemy sprite sheet (384x384, 6x6 grid, 64x64 frames)
+        this.load.spritesheet('mummy', 'assets/images/enemies/Mummy Sprite Sheet-sheet_aseprite_scaled.png', {
+            frameWidth: 64,
+            frameHeight: 64
+        });
     }
 
     createPlayerAnimations() {
@@ -44,6 +50,24 @@ class GameScene extends Phaser.Scene {
         });
     }
 
+    createEnemyAnimations() {
+        // Mummy idle animation (frames 0-2)
+        this.anims.create({
+            key: 'mummy_idle',
+            frames: this.anims.generateFrameNumbers('mummy', { start: 0, end: 2 }),
+            frameRate: 6,
+            repeat: -1
+        });
+
+        // Mummy walk animation (frames 4-8)
+        this.anims.create({
+            key: 'mummy_walk',
+            frames: this.anims.generateFrameNumbers('mummy', { start: 4, end: 8 }),
+            frameRate: 8,
+            repeat: -1
+        });
+    }
+
     create() {
         // Get canvas dimensions
         const width = this.scale.width;
@@ -51,13 +75,15 @@ class GameScene extends Phaser.Scene {
 
         // Set pixel art rendering (crisp, no blur/smoothing)
         this.textures.get('player').setFilter(Phaser.Textures.FilterMode.NEAREST);
+        this.textures.get('mummy').setFilter(Phaser.Textures.FilterMode.NEAREST);
 
         // Add map background (1024x1024, maintaining aspect ratio)
         // Scale to fit height (600x600) to preserve square aspect ratio
         this.add.image(width / 2, height / 2, 'map_normal').setDisplaySize(height, height);
 
-        // Create player animations
+        // Create animations
         this.createPlayerAnimations();
+        this.createEnemyAnimations();
 
         // Initialize game entities
         this.player = new Player(this, width / 2, height / 2);
