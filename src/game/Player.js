@@ -5,13 +5,26 @@ class Player {
     constructor(scene, x, y) {
         this.scene = scene;
         
-        // Create player sprite (green circle)
-        this.sprite = scene.add.circle(x, y, 15, 0x4caf50);
+        // Create player sprite (32x32 adventurer)
+        this.sprite = scene.add.sprite(x, y, 'player', 0);
+        
+        // Scale sprite visually to 2x (32x32 → 64x64)
+        this.sprite.setScale(2);
+        
+        // Add physics AFTER scaling
         scene.physics.add.existing(this.sprite);
         this.sprite.body.setCollideWorldBounds(true);
         
-        // Set smaller collision body (80% of visual size for better overlap with enemies)
-        this.sprite.body.setCircle(12); // Visual radius 15, physics radius 12
+        // Set physics body: radius 12, centered horizontally, adjusted vertically
+        const hitboxRadius = 8; // Desired collision radius in world pixels
+        const visualSize = 64; // 32 * 2 scale
+        const circleOffsetX = 5;
+        const circleOffsetY = 10; // Adjusted up by 10 pixels
+        
+        this.sprite.body.setCircle(hitboxRadius, circleOffsetX, circleOffsetY);
+        
+        // Play idle animation
+        this.sprite.play('player_idle');
         
         // No drag - using velocity-based movement like enemies
 
@@ -24,7 +37,7 @@ class Player {
             armor: 0,
             critChance: 0,
             attackSpeed: 1,
-            healthRegen: 100,
+            healthRegen: 0,
             dodge: 0,
             luck: 0,
             pickup_range: 100,
@@ -67,9 +80,27 @@ class Player {
             // Apply velocity based on speed stat
             const speed = this.stats.speed;
             this.sprite.body.setVelocity(direction.x * speed, direction.y * speed);
+            
+            // Update animation based on direction
+            if (direction.y < 0) {
+                // Moving up/north - use backwards facing animation
+                this.sprite.play('player_walk_up', true);
+                this.sprite.setFlipX(false);
+            } else if (direction.x !== 0) {
+                // Moving left/right (or diagonally down) - use side walking animation
+                this.sprite.play('player_walk_side', true);
+                this.sprite.setFlipX(direction.x < 0); // Flip if moving left
+            } else {
+                // Moving down - use side walking animation (no flip)
+                this.sprite.play('player_walk_side', true);
+                this.sprite.setFlipX(false);
+            }
         } else {
             // No input - stop immediately
             this.sprite.body.setVelocity(0, 0);
+            
+            // Play idle animation
+            this.sprite.play('player_idle', true);
         }
     }
 
@@ -106,6 +137,9 @@ class Player {
         }
         
         console.log(`💥 Player took ${actualDamage} damage (Health: ${this.stats.currentHealth}/${this.stats.maxHealth})`);
+        
+        // Return actual damage dealt (for iframe calculation)
+        return actualDamage;
     }
 
     getPosition() {

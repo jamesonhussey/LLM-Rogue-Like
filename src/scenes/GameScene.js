@@ -7,7 +7,41 @@ class GameScene extends Phaser.Scene {
     }
 
     preload() {
-        // No assets to load yet - using colored circles
+        // Load map background
+        this.load.image('map_normal', 'assets/images/backgrounds/normal_map_no_walls_smoothed.png');
+        // this.load.image('map_pixel', 'assets/images/backgrounds/map_pixel_art.png'); // Alternative
+        
+        // Load player sprite sheet (416x480, 13x15 grid, 32x32 frames)
+        this.load.spritesheet('player', 'assets/images/characters/Adventurer Sprite Sheet v1.5.png', {
+            frameWidth: 32,
+            frameHeight: 32
+        });
+    }
+
+    createPlayerAnimations() {
+        // Idle animation (row 1, frames 0-12)
+        this.anims.create({
+            key: 'player_idle',
+            frames: this.anims.generateFrameNumbers('player', { start: 0, end: 12 }),
+            frameRate: 10,
+            repeat: -1
+        });
+
+        // Walk up/north (row 9, frames 104-107 = 8*13 to 8*13+3)
+        this.anims.create({
+            key: 'player_walk_up',
+            frames: this.anims.generateFrameNumbers('player', { start: 104, end: 107 }),
+            frameRate: 8,
+            repeat: -1
+        });
+
+        // Walk side (row 2, frames 13-20 = 1*13 to 1*13+7)
+        this.anims.create({
+            key: 'player_walk_side',
+            frames: this.anims.generateFrameNumbers('player', { start: 13, end: 20 }),
+            frameRate: 10,
+            repeat: -1
+        });
     }
 
     create() {
@@ -15,18 +49,15 @@ class GameScene extends Phaser.Scene {
         const width = this.scale.width;
         const height = this.scale.height;
 
-        // Create simple background
-        this.add.rectangle(0, 0, width, height, 0x0a0a0a).setOrigin(0);
-        
-        // Add grid pattern for visual reference
-        const graphics = this.add.graphics();
-        graphics.lineStyle(1, 0x222222, 0.3);
-        for (let x = 0; x < width; x += 50) {
-            graphics.lineBetween(x, 0, x, height);
-        }
-        for (let y = 0; y < height; y += 50) {
-            graphics.lineBetween(0, y, width, y);
-        }
+        // Set pixel art rendering (crisp, no blur/smoothing)
+        this.textures.get('player').setFilter(Phaser.Textures.FilterMode.NEAREST);
+
+        // Add map background (1024x1024, maintaining aspect ratio)
+        // Scale to fit height (600x600) to preserve square aspect ratio
+        this.add.image(width / 2, height / 2, 'map_normal').setDisplaySize(height, height);
+
+        // Create player animations
+        this.createPlayerAnimations();
 
         // Initialize game entities
         this.player = new Player(this, width / 2, height / 2);
@@ -153,9 +184,9 @@ class GameScene extends Phaser.Scene {
             this
         );
 
-        // Track time between enemy damage to player (cooldown)
+        // Track time between enemy damage to player (dynamic iframes)
         this.lastEnemyDamageTime = 0;
-        this.enemyDamageCooldown = 500; // 0.5 seconds between hits
+        this.currentIframeDuration = 0; // Dynamic iframe from last hit (in milliseconds)
     }
 
     onProjectileHitEnemy(projectileSprite, enemySprite) {
@@ -190,8 +221,8 @@ class GameScene extends Phaser.Scene {
     }
 
     onPlayerHitEnemy(playerSprite, enemySprite) {
-        // Damage cooldown to prevent instant death
-        if (this.time.now < this.lastEnemyDamageTime + this.enemyDamageCooldown) {
+        // Check iframes from previous hit (dynamic duration)
+        if (this.time.now < this.lastEnemyDamageTime + this.currentIframeDuration) {
             return;
         }
 
@@ -200,9 +231,40 @@ class GameScene extends Phaser.Scene {
             return;
         }
 
-        // Apply damage to player
-        this.player.takeDamage(enemy.contactDamage);
+        // Dodge roll (capped at 60%)
+        const dodgeChance = Math.min(this.player.stats.dodge, 60);
+        const dodgeRoll = Math.random() * 100;
+        
+        if (dodgeRoll < dodgeChance) {
+            // Dodge successful!
+            this.showDodgeEffect(this.player.sprite.x, this.player.sprite.y);
+            
+            // Set minimum iframe for dodge (0.2s)
+            this.currentIframeDuration = 200; // 0.2s in milliseconds
+            this.lastEnemyDamageTime = this.time.now;
+            return; // Skip damage entirely
+        }
+
+        // Apply damage and get actual damage dealt (armor-aware)
+        const actualDamage = this.player.takeDamage(enemy.contactDamage);
+        
+        // Show damage number on player
+        this.showPlayerDamageNumber(this.player.sprite.x, this.player.sprite.y, actualDamage);
+        
+        // Calculate iframe duration using Brotato formula
+        // Iframe Duration = 0.4s * (Damage % of Max HP) / 15%
+        const damagePercent = (actualDamage / this.player.stats.maxHealth) * 100;
+        const baseIframe = 0.4 * (damagePercent / 15); // In seconds
+        
+        // Clamp to min 0.2s, max 0.4s, round to 3 decimal places
+        const clampedIframe = Math.max(0.2, Math.min(0.4, baseIframe));
+        const roundedIframe = Math.round(clampedIframe * 1000) / 1000; // 3 decimal places
+        
+        // Convert to milliseconds and store
+        this.currentIframeDuration = roundedIframe * 1000;
         this.lastEnemyDamageTime = this.time.now;
+        
+        console.log(`🛡️ Iframe: ${roundedIframe.toFixed(3)}s (${actualDamage} dmg = ${damagePercent.toFixed(1)}% of max HP)`);
     }
 
     setupDebugControls() {
@@ -471,6 +533,57 @@ class GameScene extends Phaser.Scene {
             ease: 'Power2',
             onComplete: () => {
                 healText.destroy();  // Clean up
+            }
+        });
+    }
+
+    showPlayerDamageNumber(x, y, damage) {
+        // Random horizontal offset to prevent stacking
+        const offsetX = Phaser.Math.Between(-15, 15);
+        
+        const damageText = this.add.text(x + offsetX, y, `-${damage}`, {
+            fontSize: '20px',
+            fill: '#ff3333', // Bright red
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 3
+        }).setOrigin(0.5, 0.5);
+        
+        // Animate: float up + fade out
+        this.tweens.add({
+            targets: damageText,
+            y: y - 60,  // Float upward
+            alpha: 0,   // Fade out
+            duration: 900,
+            ease: 'Power2',
+            onComplete: () => {
+                damageText.destroy();
+            }
+        });
+    }
+
+    showDodgeEffect(x, y) {
+        // Random horizontal offset to prevent stacking
+        const offsetX = Phaser.Math.Between(-15, 15);
+        
+        const dodgeText = this.add.text(x + offsetX, y, 'DODGE!', {
+            fontSize: '22px',
+            fill: '#00bcd4', // Bright cyan
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 3
+        }).setOrigin(0.5, 0.5);
+        
+        // Animate: float up + fade out + scale up (opposite of heal)
+        this.tweens.add({
+            targets: dodgeText,
+            y: y - 60,  // Float upward 60 pixels
+            alpha: 0,   // Fade to invisible
+            scale: 1.2, // Scale up from 1.0 to 1.2 for emphasis
+            duration: 800,
+            ease: 'Power2',
+            onComplete: () => {
+                dodgeText.destroy();  // Clean up
             }
         });
     }
