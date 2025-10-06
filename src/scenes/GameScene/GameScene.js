@@ -72,8 +72,13 @@ class GameScene extends Phaser.Scene {
         // Initialize Wave Manager
         this.waveManager = new WaveManager(this, this.enemyManager);
 
-        // Setup collisions
-        this.setupCollisions();
+        // Initialize helper managers
+        this.visualEffects = new VisualEffects(this);
+        this.collisionHandler = new CollisionHandler(this, this.player, this.visualEffects);
+        this.debugManager = new DebugManager(this, this.player, this.enemyManager, this.waveManager, this.projectileManager);
+
+        // Setup collisions (delegated to CollisionHandler)
+        this.collisionHandler.setupCollisions(this.projectileManager, this.enemyManager, this.currencyManager);
 
         // Input controls
         this.cursors = this.input.keyboard.createCursorKeys();
@@ -84,8 +89,10 @@ class GameScene extends Phaser.Scene {
             right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D)
         };
 
-        // Debug/Test controls
-        this.setupDebugControls();
+        // ESC key: Toggle pause menu
+        this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC).on('down', () => {
+            this.togglePause();
+        });
 
         // Create UI elements
         this.healthBar = new HealthBar(this, 15, 20);
@@ -98,14 +105,6 @@ class GameScene extends Phaser.Scene {
             stroke: '#000000',
             strokeThickness: 3
         }).setOrigin(1, 0).setScrollFactor(0); // Anchor to top-right, fixed to camera
-
-        // Debug text (moved down to not overlap health bar)
-        this.debugText = this.add.text(10, 90, '', {
-            fontSize: '14px',
-            fill: '#ffffff',
-            backgroundColor: '#000000',
-            padding: { x: 5, y: 5 }
-        });
 
         // Game state
         this.isGameOver = false;
@@ -142,169 +141,6 @@ class GameScene extends Phaser.Scene {
         console.log('✅ Game scene created');
     }
 
-    setupCollisions() {
-        // Collision between projectiles and enemies (damage)
-        this.physics.add.overlap(
-            this.projectileManager.getGroup(),
-            this.enemyManager.enemyGroup,
-            this.onProjectileHitEnemy,
-            null,
-            this
-        );
-
-        // Overlap between player and enemies (damage detection)
-        this.physics.add.overlap(
-            this.player.sprite,
-            this.enemyManager.enemyGroup,
-            this.onPlayerHitEnemy,
-            null,
-            this
-        );
-
-        // Physical collision between player and enemies (blocking movement)
-        this.physics.add.collider(
-            this.player.sprite,
-            this.enemyManager.enemyGroup
-        );
-
-        // Physical collision between enemies (prevent full overlap)
-        this.physics.add.collider(
-            this.enemyManager.enemyGroup,
-            this.enemyManager.enemyGroup
-        );
-
-        // Overlap between player and currency (pickup)
-        this.physics.add.overlap(
-            this.player.sprite,
-            this.currencyManager.getGroup(),
-            (playerSprite, currencySprite) => {
-                this.currencyManager.onCurrencyPickup(playerSprite, currencySprite);
-            },
-            null,
-            this
-        );
-
-        // Track time between enemy damage to player (dynamic iframes)
-        this.lastEnemyDamageTime = 0;
-        this.currentIframeDuration = 0; // Dynamic iframe from last hit (in milliseconds)
-    }
-
-    onProjectileHitEnemy(projectileSprite, enemySprite) {
-        // Get data from sprites
-        const projectile = projectileSprite.projectileData;
-        const enemy = enemySprite.enemyData;
-
-        if (!projectile || !enemy || !projectile.isActive || !enemy.isAlive) {
-            return;
-        }
-
-        // Get base damage
-        let damage = projectile.getDamage();
-        
-        // Calculate if this hit is a crit
-        const critChance = this.player.stats.critChance;
-        const isCrit = Math.random() * 100 < critChance;
-        
-        // Apply crit multiplier (2x damage)
-        if (isCrit) {
-            damage = Math.round(damage * 2);
-        }
-
-        // Apply damage
-        enemy.takeDamage(damage);
-
-        // Show damage number at enemy position
-        this.showDamageNumber(enemy.sprite.x, enemy.sprite.y, damage, isCrit);
-
-        // Destroy projectile
-        projectile.destroy();
-    }
-
-    onPlayerHitEnemy(playerSprite, enemySprite) {
-        // Check iframes from previous hit (dynamic duration)
-        if (this.time.now < this.lastEnemyDamageTime + this.currentIframeDuration) {
-            return;
-        }
-
-        const enemy = enemySprite.enemyData;
-        if (!enemy || !enemy.isAlive) {
-            return;
-        }
-
-        // Dodge roll (capped at 60%)
-        const dodgeChance = Math.min(this.player.stats.dodge, 60);
-        const dodgeRoll = Math.random() * 100;
-        
-        if (dodgeRoll < dodgeChance) {
-            // Dodge successful!
-            this.showDodgeEffect(this.player.sprite.x, this.player.sprite.y);
-            
-            // Set minimum iframe for dodge (0.2s)
-            this.currentIframeDuration = 200; // 0.2s in milliseconds
-            this.lastEnemyDamageTime = this.time.now;
-            return; // Skip damage entirely
-        }
-
-        // Apply damage and get actual damage dealt (armor-aware)
-        const actualDamage = this.player.takeDamage(enemy.contactDamage);
-        
-        // Show damage number on player
-        this.showPlayerDamageNumber(this.player.sprite.x, this.player.sprite.y, actualDamage);
-        
-        // Calculate iframe duration using Brotato formula
-        // Iframe Duration = 0.4s * (Damage % of Max HP) / 15%
-        const damagePercent = (actualDamage / this.player.stats.maxHealth) * 100;
-        const baseIframe = 0.4 * (damagePercent / 15); // In seconds
-        
-        // Clamp to min 0.2s, max 0.4s, round to 3 decimal places
-        const clampedIframe = Math.max(0.2, Math.min(0.4, baseIframe));
-        const roundedIframe = Math.round(clampedIframe * 1000) / 1000; // 3 decimal places
-        
-        // Convert to milliseconds and store
-        this.currentIframeDuration = roundedIframe * 1000;
-        this.lastEnemyDamageTime = this.time.now;
-        
-        console.log(`🛡️ Iframe: ${roundedIframe.toFixed(3)}s (${actualDamage} dmg = ${damagePercent.toFixed(1)}% of max HP)`);
-    }
-
-    setupDebugControls() {
-        // T key: Damage nearest enemy
-        this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T).on('down', () => {
-            const nearest = this.enemyManager.findNearest(this.player.sprite.x, this.player.sprite.y);
-            if (nearest) {
-                nearest.takeDamage(10);
-                console.log('🔨 Test damage applied to nearest enemy');
-            }
-        });
-
-        // E key: Spawn new enemy at test location
-        this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E).on('down', () => {
-            const width = this.scale.width;
-            const height = this.scale.height;
-            this.enemyManager.spawn(width / 2 + 200, height / 2);
-            console.log('🎯 New enemy spawned (E key)');
-        });
-
-        // K key: Kill player (test game over)
-        this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.K).on('down', () => {
-            this.player.stats.currentHealth = 0;
-            console.log('☠️ Player killed (K key - testing game over)');
-        });
-
-        // N key: Force next round (skip to between rounds)
-        this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.N).on('down', () => {
-            if (this.waveManager.isRoundActive) {
-                this.waveManager.roundTimeRemaining = 0;
-                console.log('⏩ Forcing round end (N key)');
-            }
-        });
-
-        // ESC key: Toggle pause menu
-        this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC).on('down', () => {
-            this.togglePause();
-        });
-    }
-
     update(time, delta) {
         // Stop updates if game over, paused, or in shop
         if (this.isGameOver || this.isPaused || this.shopScreen.isVisible()) {
@@ -326,7 +162,7 @@ class GameScene extends Phaser.Scene {
                 );
                 
                 // Show heal effect at player position
-                this.showHealEffect(this.player.sprite.x, this.player.sprite.y);
+                this.visualEffects.showHealEffect(this.player.sprite.x, this.player.sprite.y);
                 
                 // Reset timer
                 this.lastHealthRegenTime = this.time.now;
@@ -363,7 +199,7 @@ class GameScene extends Phaser.Scene {
         // Update UI
         this.healthBar.update(this.player.stats.currentHealth, this.player.stats.maxHealth);
         this.updateRoundHUD();
-        this.updateDebugText();
+        this.debugManager.update();
     }
 
     triggerGameOver() {
@@ -420,36 +256,6 @@ class GameScene extends Phaser.Scene {
         console.log('✅ Game restarted');
     }
 
-    updateDebugText() {
-        const playerPos = this.player.getPosition();
-        const stats = this.player.stats;
-        const nearestEnemy = this.enemyManager.findNearest(playerPos.x, playerPos.y);
-        const enemyInfo = nearestEnemy 
-            ? `Nearest Enemy: ${Math.round(Phaser.Math.Distance.Between(playerPos.x, playerPos.y, nearestEnemy.sprite.x, nearestEnemy.sprite.y))}px`
-            : 'No enemies';
-
-        const roundInfo = this.waveManager.getRoundInfo();
-        const graceStatus = this.waveManager.isInGracePeriod() ? ' [GRACE]' : '';
-
-        this.debugText.setText([
-            `=== PLAYER STATS ===`,
-            `Position: (${Math.round(playerPos.x)}, ${Math.round(playerPos.y)})`,
-            `Health: ${Math.round(stats.currentHealth)}/${stats.maxHealth} | Regen: ${stats.healthRegen}`,
-            `Speed: ${stats.speed} | Armor: ${stats.armor} | Dodge: ${stats.dodge}%`,
-            `Damage: +${stats.damageBonus} | Crit: ${stats.critChance}% | Atk Speed: ${stats.attackSpeed}`,
-            `Luck: ${stats.luck} | XP Gain: ${stats.xp_gain}x | Pickup: ${stats.pickup_range}`,
-            `Currency: 💰 ${stats.currency}`,
-            ``,
-            `=== WAVE INFO ===`,
-            `Round: ${roundInfo.roundNumber} | Time: ${roundInfo.timeRemaining}s${graceStatus}`,
-            `Wave: ${this.waveManager.currentWaveInRound} | Enemies: ${roundInfo.enemyCount} | Projectiles: ${this.projectileManager.getCount()}`,
-            enemyInfo,
-            '',
-            'Controls: WASD or Arrow Keys',
-            'E: spawn enemy | K: game over | N: next round'
-        ]);
-    }
-
     updateRoundHUD() {
         const roundInfo = this.waveManager.getRoundInfo();
         
@@ -479,113 +285,6 @@ class GameScene extends Phaser.Scene {
         
         // Convert to milliseconds
         return secondsPer1HP * 1000;
-    }
-
-    showDamageNumber(x, y, damage, isCrit = false) {
-        // Create text at enemy position
-        const color = isCrit ? '#ffd700' : '#ffffff';
-        const fontSize = isCrit ? '24px' : '18px';
-        const displayText = isCrit ? `${damage} ★` : `${damage}`;
-        
-        // Random horizontal offset to prevent stacking
-        const offsetX = Phaser.Math.Between(-10, 10);
-        
-        const damageText = this.add.text(x + offsetX, y, displayText, {
-            fontSize: fontSize,
-            fill: color,
-            fontStyle: 'bold',
-            stroke: '#000000',
-            strokeThickness: 3
-        }).setOrigin(0.5, 0.5);
-        
-        // Animate: float up + fade out
-        this.tweens.add({
-            targets: damageText,
-            y: y - 60,  // Float upward 60 pixels
-            alpha: 0,   // Fade to invisible
-            duration: 1000,  // Over 1 second
-            ease: 'Power2',
-            onComplete: () => {
-                damageText.destroy();  // Clean up
-            }
-        });
-    }
-
-    showHealEffect(x, y) {
-        // Random horizontal offset to prevent stacking
-        const offsetX = Phaser.Math.Between(-10, 10);
-        
-        const healText = this.add.text(x + offsetX, y, '+', {
-            fontSize: '20px',
-            fill: '#4caf50', // Green
-            fontStyle: 'bold',
-            stroke: '#000000',
-            strokeThickness: 3
-        }).setOrigin(0.5, 0.5);
-        
-        // Animate: float up + fade out + scale pulse
-        this.tweens.add({
-            targets: healText,
-            y: y - 50,  // Float upward 50 pixels
-            alpha: 0,   // Fade to invisible
-            scale: 0.8, // Scale pulse from 1.0 to 0.8
-            duration: 800,  // Slightly faster than damage numbers
-            ease: 'Power2',
-            onComplete: () => {
-                healText.destroy();  // Clean up
-            }
-        });
-    }
-
-    showPlayerDamageNumber(x, y, damage) {
-        // Random horizontal offset to prevent stacking
-        const offsetX = Phaser.Math.Between(-15, 15);
-        
-        const damageText = this.add.text(x + offsetX, y, `-${damage}`, {
-            fontSize: '20px',
-            fill: '#ff3333', // Bright red
-            fontStyle: 'bold',
-            stroke: '#000000',
-            strokeThickness: 3
-        }).setOrigin(0.5, 0.5);
-        
-        // Animate: float up + fade out
-        this.tweens.add({
-            targets: damageText,
-            y: y - 60,  // Float upward
-            alpha: 0,   // Fade out
-            duration: 900,
-            ease: 'Power2',
-            onComplete: () => {
-                damageText.destroy();
-            }
-        });
-    }
-
-    showDodgeEffect(x, y) {
-        // Random horizontal offset to prevent stacking
-        const offsetX = Phaser.Math.Between(-15, 15);
-        
-        const dodgeText = this.add.text(x + offsetX, y, 'DODGE!', {
-            fontSize: '22px',
-            fill: '#00bcd4', // Bright cyan
-            fontStyle: 'bold',
-            stroke: '#000000',
-            strokeThickness: 3
-        }).setOrigin(0.5, 0.5);
-        
-        // Animate: float up + fade out + scale up (opposite of heal)
-        this.tweens.add({
-            targets: dodgeText,
-            y: y - 60,  // Float upward 60 pixels
-            alpha: 0,   // Fade to invisible
-            scale: 1.2, // Scale up from 1.0 to 1.2 for emphasis
-            duration: 800,
-            ease: 'Power2',
-            onComplete: () => {
-                dodgeText.destroy();  // Clean up
-            }
-        });
     }
 
     togglePause() {
