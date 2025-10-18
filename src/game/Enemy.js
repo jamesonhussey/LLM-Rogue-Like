@@ -91,6 +91,12 @@ class Enemy {
         } else {
             this.healthBarFill.setFillStyle(0xf44336); // Red
         }
+        
+        // Clamp enemy position to map bounds
+        if (this.scene.mapBounds) {
+            this.sprite.x = Phaser.Math.Clamp(this.sprite.x, this.scene.mapBounds.minX, this.scene.mapBounds.maxX);
+            this.sprite.y = Phaser.Math.Clamp(this.sprite.y, this.scene.mapBounds.minY, this.scene.mapBounds.maxY);
+        }
     }
 
     takeDamage(amount) {

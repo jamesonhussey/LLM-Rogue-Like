@@ -28,6 +28,10 @@ class WaveManager {
         this.enemiesToSpawnThisWave = 0;
         this.nextSpawnTime = 0;
 
+        // Pending spawns (with 2-second warning markers)
+        this.pendingSpawns = []; // Array of { x, y, marker, spawnTime }
+        this.spawnWarningDuration = 2000; // 2 seconds
+
         console.log('✅ Wave Manager initialized');
     }
 
@@ -162,19 +166,76 @@ class WaveManager {
                 this.graceTimeRemaining = 2000; // 2 second grace period
             }
         }
+
+        // Process pending spawns (spawn enemies when their marker time expires)
+        this.processPendingSpawns();
     }
 
-    // Spawn a single enemy at random position within screen bounds
+    // Process pending spawns and spawn enemies when ready
+    processPendingSpawns() {
+        const currentTime = this.scene.time.now;
+        
+        // Check each pending spawn
+        for (let i = this.pendingSpawns.length - 1; i >= 0; i--) {
+            const spawn = this.pendingSpawns[i];
+            
+            if (currentTime >= spawn.spawnTime) {
+                // Time to spawn! Remove marker and spawn enemy
+                spawn.marker.destroy();
+                this.enemyManager.spawn(spawn.x, spawn.y);
+                
+                // Remove from pending list
+                this.pendingSpawns.splice(i, 1);
+                
+                console.log(`   👾 Enemy spawned at marker location (${Math.round(spawn.x)}, ${Math.round(spawn.y)})`);
+            }
+        }
+    }
+
+    // Create a red X marker at spawn location
+    createSpawnMarker(x, y) {
+        const graphics = this.scene.add.graphics();
+        const size = 20;
+        const lineWidth = 3;
+        
+        graphics.lineStyle(lineWidth, 0xFF0000, 0.6); // Red color, start at 60% opacity
+        
+        // Draw X (two diagonal lines)
+        graphics.beginPath();
+        graphics.moveTo(x - size / 2, y - size / 2);
+        graphics.lineTo(x + size / 2, y + size / 2);
+        graphics.moveTo(x + size / 2, y - size / 2);
+        graphics.lineTo(x - size / 2, y + size / 2);
+        graphics.strokePath();
+        
+        // Animate opacity from 60% to 100% over 2 seconds
+        this.scene.tweens.add({
+            targets: graphics,
+            alpha: { from: 0.6, to: 1.0 },
+            duration: this.spawnWarningDuration,
+            ease: 'Linear'
+        });
+        
+        return graphics;
+    }
+
+    // Schedule an enemy spawn with a 2-second warning marker
     spawnEnemy() {
-        const width = this.scene.scale.width;
-        const height = this.scene.scale.height;
+        const mapBounds = this.scene.mapBounds;
 
-        // Random position within screen bounds (with small margin from edges)
+        // Random position within map bounds (with small margin from edges)
         const margin = 30;
-        const x = Phaser.Math.Between(margin, width - margin);
-        const y = Phaser.Math.Between(margin, height - margin);
+        const x = Phaser.Math.Between(mapBounds.minX + margin, mapBounds.maxX - margin);
+        const y = Phaser.Math.Between(mapBounds.minY + margin, mapBounds.maxY - margin);
 
-        this.enemyManager.spawn(x, y);
+        // Create warning marker
+        const marker = this.createSpawnMarker(x, y);
+        
+        // Schedule the actual spawn
+        const spawnTime = this.scene.time.now + this.spawnWarningDuration;
+        this.pendingSpawns.push({ x, y, marker, spawnTime });
+        
+        console.log(`   ⚠️ Spawn marker placed at (${Math.round(x)}, ${Math.round(y)})`);
     }
 
     // End the current round
@@ -184,11 +245,25 @@ class WaveManager {
         this.isRoundActive = false;
         this.isWaveSpawning = false;
 
+        // Clear all pending spawn markers
+        this.clearPendingSpawns();
+
         // Remove all remaining enemies (don't kill them, just remove)
         this.removeAllEnemies();
 
         // Trigger round complete event
         this.scene.events.emit('roundComplete', this.currentRound);
+    }
+
+    // Clear all pending spawn markers
+    clearPendingSpawns() {
+        this.pendingSpawns.forEach(spawn => {
+            if (spawn.marker) {
+                spawn.marker.destroy();
+            }
+        });
+        this.pendingSpawns = [];
+        console.log('   🧹 Cleared all pending spawn markers');
     }
 
     // Remove all enemies without killing them

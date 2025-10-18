@@ -81,12 +81,29 @@ class GameScene extends Phaser.Scene {
         // Scale to fit height (600x600) to preserve square aspect ratio
         this.add.image(width / 2, height / 2, 'map_normal').setDisplaySize(height, height);
 
+        // Define map bounds (playable area is the square map, centered on screen)
+        // Map is displayed as a square with size = height, centered horizontally
+        const mapSize = height;
+        const mapCenterX = width / 2;
+        const mapCenterY = height / 2;
+        
+        this.mapBounds = {
+            minX: mapCenterX - mapSize / 2,
+            maxX: mapCenterX + mapSize / 2,
+            minY: mapCenterY - mapSize / 2,
+            maxY: mapCenterY + mapSize / 2,
+            centerX: mapCenterX,
+            centerY: mapCenterY
+        };
+        
+        console.log('🗺️ Map bounds set:', this.mapBounds);
+
         // Create animations
         this.createPlayerAnimations();
         this.createEnemyAnimations();
 
         // Initialize game entities
-        this.player = new Player(this, width / 2, height / 2);
+        this.player = new Player(this, width / 2, height / 2, this.mapBounds);
         this.enemyManager = new EnemyManager(this);
         this.projectileManager = new ProjectileManager(this);
         this.currencyManager = new CurrencyManager(this);

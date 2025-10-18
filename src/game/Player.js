@@ -2,8 +2,9 @@
 // Handles player entity, movement, and stats
 
 class Player {
-    constructor(scene, x, y) {
+    constructor(scene, x, y, mapBounds) {
         this.scene = scene;
+        this.mapBounds = mapBounds; // Store map bounds for position clamping
         
         // Create player sprite (32x32 adventurer)
         this.sprite = scene.add.sprite(x, y, 'player', 0);
@@ -13,7 +14,8 @@ class Player {
         
         // Add physics AFTER scaling
         scene.physics.add.existing(this.sprite);
-        this.sprite.body.setCollideWorldBounds(true);
+        // Don't use world bounds - we'll clamp to map bounds manually
+        this.sprite.body.setCollideWorldBounds(false);
         
         // Set physics body: radius 12, centered horizontally, adjusted vertically
         const hitboxRadius = 8; // Desired collision radius in world pixels
@@ -42,7 +44,7 @@ class Player {
             luck: 0,
             pickup_range: 100,
             xp_gain: 1,
-            currency: 0 // Gold collected
+            currency: 1000 // Gold collected
         };
 
         // Weapon will be set by GameScene
@@ -101,6 +103,12 @@ class Player {
             
             // Play idle animation
             this.sprite.play('player_idle', true);
+        }
+        
+        // Clamp player position to map bounds
+        if (this.mapBounds) {
+            this.sprite.x = Phaser.Math.Clamp(this.sprite.x, this.mapBounds.minX, this.mapBounds.maxX);
+            this.sprite.y = Phaser.Math.Clamp(this.sprite.y, this.mapBounds.minY, this.mapBounds.maxY);
         }
     }
 
